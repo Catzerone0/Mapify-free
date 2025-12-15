@@ -1,5 +1,5 @@
 /**
- * Expand mind map node API endpoint
+ * Expand an existing node with AI-generated children
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -7,14 +7,14 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { AIMapEngine } from '@/lib/ai/engine';
-import { ExpansionRequest } from '@/lib/ai/types';
+import { ExpansionRequest, MapNodeData } from '@/lib/ai/types';
 import { ApiError } from '@/lib/errors';
 import { rateLimiter } from '@/lib/rate-limit';
 
-const ExpandSchema = z.object({
+const ExpansionSchema = z.object({
   nodeId: z.string().min(1, 'Node ID is required'),
   prompt: z.string().optional(),
-  depth: z.number().int().min(1).max(5).optional(),
+  depth: z.number().min(1).max(5).optional(),
   complexity: z.enum(['simple', 'moderate', 'complex']).optional(),
   provider: z.enum(['openai', 'gemini', 'anthropic']).optional(),
 });
@@ -28,28 +28,47 @@ export async function POST(
     
     // Apply rate limiting
     const clientIp = request.headers.get('x-forwarded-for') || 'unknown';
-    const rateLimitKey = `maps:${mindMapId}:expand-node:${clientIp}`;
+    const rateLimitKey = `maps:expand:${clientIp}`;
     
     try {
-      rateLimiter.check(rateLimitKey, { windowMs: 60000, maxRequests: 10 });
+      rateLimiter.check(rateLimitKey, { windowMs: 60000, maxRequests: 5 });
     } catch {
       throw new ApiError(429, 'Rate limit exceeded');
     }
     
     // Authenticate user
     const session = await auth();
-    if (!session?.user) {
+    if (!session?.user?.id) {
       throw new ApiError(401, 'Unauthorized');
     }
     
-    // Get mind map to validate access
-    const mindMap = await db.mindMap.findUnique({
-      where: { id: mindMapId },
+    // Parse and validate request body
+    const body = await request.json();
+    const validated = ExpansionSchema.parse(body);
+    
+    // Validate access to the mind map
+    const mindMap = await db.mindMap.findFirst({
+      where: {
+        id: mindMapId,
+        workspace: {
+          members: {
+            some: {
+              userId: session.user.id!,
+            },
+          },
+        },
+      },
       include: {
+        nodes: {
+          include: {
+            children: true,
+            parent: true,
+          },
+        },
         workspace: {
           include: {
             members: {
-              where: { userId: session.user.id },
+              where: { userId: session.user.id! },
             },
           },
         },
@@ -57,24 +76,14 @@ export async function POST(
     });
     
     if (!mindMap) {
-      throw new ApiError(404, 'Mind map not found');
+      throw new ApiError(403, 'Mind map not found or access denied');
     }
     
-    if (mindMap.workspace.members.length === 0) {
-      throw new ApiError(403, 'Access denied');
-    }
+    // Find the target node
+    const targetNode = mindMap.nodes.find(node => node.id === validated.nodeId);
     
-    // Parse and validate request body
-    const body = await request.json();
-    const validated = ExpandSchema.parse(body);
-    
-    // Validate that the node belongs to this mind map
-    const node = await db.mapNode.findUnique({
-      where: { id: validated.nodeId },
-    });
-    
-    if (!node || node.mindMapId !== mindMapId) {
-      throw new ApiError(404, 'Node not found in this mind map');
+    if (!targetNode) {
+      throw new ApiError(404, 'Target node not found');
     }
     
     // Validate provider access
@@ -104,13 +113,16 @@ export async function POST(
     
     // Start AI map engine
     const engine = new AIMapEngine();
-    const result = await engine.expandNode(expansionRequest);
+    const result = await engine.expandNode(mindMapId, expansionRequest);
     
     if (!result.success) {
-      throw new ApiError(500, result.error || 'Node expansion failed');
+      throw new ApiError(500, result.error || 'Expansion failed');
     }
     
-    // Return the expanded node
+    // The AI engine already handles updating the database with new nodes
+    // We just need to return the success response
+    
+    // Return the expanded node data
     return NextResponse.json({
       success: true,
       data: result.data,

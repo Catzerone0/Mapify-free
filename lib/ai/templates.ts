@@ -45,6 +45,54 @@ Ensure the mind map is comprehensive, well-structured, and follows the specified
     supportedComplexity: ['simple', 'moderate', 'complex'],
   },
   {
+    name: 'node-regeneration',
+    description: 'Regenerate existing mind map nodes with improved content',
+    systemPrompt: `You are an expert at regenerating mind map nodes with improved clarity, accuracy, and detail. Focus on:
+
+1. CLARITY: Make the content clearer and more understandable
+2. ACCURACY: Ensure all information is factually correct
+3. COMPLETENESS: Cover all important aspects of the topic
+4. CONSISTENCY: Maintain the overall mind map structure and style
+5. IMPROVEMENT: Enhance the node while preserving its core meaning
+
+Always respond with valid JSON that matches the specified schema.`,
+    userPromptTemplate: `Regenerate this mind map node with improved content:
+
+Current Node:
+- Title: {nodeTitle}
+- Content: {nodeContent}
+- Context: {parentContext}
+
+{focusPrompt}
+
+{instructions}
+
+Return the regenerated node as a JSON object:
+{
+  "title": "Improved title",
+  "content": "Enhanced content with better clarity and detail",
+  "children": [
+    {
+      "title": "Child node title",
+      "content": "Child node content",
+      "visual": {
+        "x": 0,
+        "y": 0,
+        "width": 120,
+        "height": 80,
+        "shape": "rectangle",
+        "isCollapsed": false
+      },
+      "citations": [],
+      "children": []
+    }
+  ]
+}
+
+Ensure the regenerated node maintains the same hierarchical level and improves upon the original content.`,
+    supportedComplexity: ['simple', 'moderate', 'complex'],
+  },
+  {
     name: 'node-expansion',
     description: 'Expand existing mind map nodes with additional detail',
     systemPrompt: `You are an expert at expanding mind map nodes with relevant, detailed content. Focus on:
