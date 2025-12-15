@@ -13,6 +13,7 @@
     "db:seed": "node prisma/seed.mjs"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.11.5",
     "@hookform/resolvers": "^3.3.4",
     "@prisma/client": "^6.0.0",
     "@t3-oss/env-nextjs": "^0.10.1",
@@ -21,10 +22,12 @@
     "crypto-js": "^4.2.0",
     "next": "16.0.7",
     "next-auth": "^5.0.0-beta.20",
+    "openai": "^4.104.0",
     "react": "19.2.1",
     "react-dom": "19.2.1",
     "react-hook-form": "^7.51.4",
     "redis": "^4.6.14",
+    "uuid": "^9.0.1",
     "zod": "^3.22.4",
     "zustand": "^4.4.7"
   },
@@ -35,6 +38,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/uuid": "^9.0.8",
     "eslint": "^9",
     "eslint-config-next": "16.0.7",
     "prisma": "^6.0.0",

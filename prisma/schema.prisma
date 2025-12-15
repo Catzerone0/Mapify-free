@@ -64,33 +64,95 @@ model WorkspaceMember {
 }
 
 model MindMap {
-  id          String   @id @default(cuid())
-  title       String
-  description String?
-  workspaceId String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String    @id @default(cuid())
+  title         String
+  description   String?
+  summary       String?   // Generated AI summary of the entire map
+  prompt        String?   // Original prompt used for generation
+  provider      String?   // Which AI provider was used
+  complexity    String?   // simple, moderate, complex
+  workspaceId   String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  nodes     MapNode[]
+  workspace     Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  nodes         MapNode[]
+  generationJobs GenerationJob[]
 
   @@index([workspaceId])
+  @@index([createdAt])
 }
 
 model MapNode {
-  id        String   @id @default(cuid())
-  mindMapId String
-  content   String
-  x         Float    @default(0)
-  y         Float    @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String    @id @default(cuid())
+  mindMapId   String
+  title       String?
+  content     String    // Rich text content, summary, or expanded details
+  parentId    String?
+  children    MapNode[] @relation("NodeChildren")
+  x           Float     @default(0)
+  y           Float     @default(0)
+  width       Float     @default(200)
+  height      Float     @default(100)
+  color       String?   // Hex color for node styling
+  shape       String    @default("rectangle") // rectangle, circle, diamond, etc.
+  level       Int       @default(0) // Depth in hierarchy
+  order       Int       @default(0) // Order among siblings
+  isCollapsed Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
-  mindMap      MindMap               @relation(fields: [mindMapId], references: [id], onDelete: Cascade)
-  attachments  ContentAttachment[]
+  mindMap     MindMap               @relation(fields: [mindMapId], references: [id], onDelete: Cascade)
+  parent      MapNode?              @relation("NodeChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  attachments ContentAttachment[]
+  citations   NodeCitation[]
+  generationJobs GenerationJob[]
 
   @@index([mindMapId])
+  @@index([parentId])
+  @@index([level])
 }
+
+model NodeCitation {
+  id        String   @id @default(cuid())
+  nodeId    String
+  title     String
+  url       String?
+  summary   String?
+  author    String?
+  createdAt DateTime @default(now())
+
+  node MapNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  @@index([nodeId])
+}
+
+model GenerationJob {
+  id          String     @id @default(cuid())
+  mindMapId   String?
+  nodeId      String?
+  prompt      String
+  provider    String     // openai, gemini, anthropic
+  status      String     // pending, processing, completed, failed
+  result      Json?      // Generated content tree
+  error       String?
+  tokensUsed  Int        @default(0)
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  mindMap     MindMap?   @relation(fields: [mindMapId], references: [id], onDelete: Cascade)
+  node        MapNode?   @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([mindMapId])
+  @@index([nodeId])
+}
+
+// Add a constraint to ensure a GenerationJob has either a mindMapId or nodeId, but not both
+// This is enforced in application logic rather than database constraints
 
 model ContentAttachment {
   id       String   @id @default(cuid())
