@@ -135,7 +135,7 @@ export default function MindMapEditorPage() {
               Go Back
             </Button>
             <Button 
-              variant="outline" 
+              variant="secondary" 
               onClick={() => window.location.reload()}
             >
               Retry

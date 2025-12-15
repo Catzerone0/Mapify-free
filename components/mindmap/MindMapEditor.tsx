@@ -3,9 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ReactFlow,
-  Node,
-  Edge,
-  addEdge,
+  Node as RFNode,
   Connection,
   useNodesState,
   useEdgesState,
@@ -20,7 +18,7 @@ import '@xyflow/react/dist/style.css';
 import './mindmap-editor.css';
 
 import { useMindMapStore } from '@/lib/stores/mindmap';
-import { MapNodeData, MindMapData } from '@/lib/ai/types';
+import { MapNodeData } from '@/lib/ai/types';
 import { MindMapNode } from './MindMapNode';
 import { NodeControlPanel } from './NodeControlPanel';
 import { ToolbarPanel } from './ToolbarPanel';
@@ -46,15 +44,13 @@ export function MindMapEditor({ mindMapId, onClose }: MindMapEditorProps) {
     updateNode,
     addNode,
     deleteNode,
-    moveNode,
     selectNode,
     clearSelection,
     loadMindMap,
-    setStreamingProgress,
   } = useMindMapStore();
 
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [rfNodes, setRfNodes, onNodesChange] = useNodesState([]);
+  const [rfEdges, setRfEdges, onEdgesChange] = useEdgesState([]);
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [showSourcePanel, setShowSourcePanel] = useState(false);
@@ -69,15 +65,15 @@ export function MindMapEditor({ mindMapId, onClose }: MindMapEditorProps) {
   }, [mindMapId, loadMindMap]);
 
   // Convert MapNodeData to React Flow nodes
-  const convertToFlowNodes = useCallback((mapNodes: MapNodeData[]): Node[] => {
-    const flowNodes: Node[] = [];
+  const convertToFlowNodes = useCallback((mapNodes: MapNodeData[]): any[] => {
+    const flowNodes: any[] = [];
 
     const traverseNodes = (nodes: MapNodeData[], parentX = 0, parentY = 0) => {
       nodes.forEach((node) => {
         const isSelected = selectedNodes.includes(node.id || '');
         const isStreaming = streamingProgress?.nodeId === node.id;
 
-        const flowNode: Node = {
+        const flowNode: any = {
           id: node.id || '',
           type: 'mindmapNode',
           position: {
@@ -92,7 +88,7 @@ export function MindMapEditor({ mindMapId, onClose }: MindMapEditorProps) {
             onSelect: () => selectNode(node.id!),
             onDelete: () => deleteNode(node.id!),
             onAddChild: (childData?: Partial<MapNodeData>) => {
-              const newNodeId = addNode(node.id!, childData);
+              const newNodeId = addNode(node.id!, childData || {});
               // Update the parent node to refresh children
               setTimeout(() => {
                 const updatedNode = { ...node, children: [...(node.children || []), { ...childData, id: newNodeId } as MapNodeData] };
@@ -121,8 +117,8 @@ export function MindMapEditor({ mindMapId, onClose }: MindMapEditorProps) {
   }, [selectedNodes, streamingProgress, updateNode, addNode, deleteNode, selectNode]);
 
   // Convert to edges for connections
-  const convertToFlowEdges = useCallback((mapNodes: MapNodeData[]): Edge[] => {
-    const flowEdges: Edge[] = [];
+  const convertToFlowEdges = useCallback((mapNodes: MapNodeData[]): any[] => {
+    const flowEdges: any[] = [];
 
     const traverseNodes = (nodes: MapNodeData[]) => {
       nodes.forEach((node) => {
@@ -156,13 +152,13 @@ export function MindMapEditor({ mindMapId, onClose }: MindMapEditorProps) {
     const flowNodes = convertToFlowNodes(mindMap.rootNodes);
     const flowEdges = convertToFlowEdges(mindMap.rootNodes);
 
-    setNodes(flowNodes);
-    setEdges(flowEdges);
-  }, [mindMap, convertToFlowNodes, convertToFlowEdges, setNodes, setEdges]);
+    setRfNodes(flowNodes as any);
+    setRfEdges(flowEdges as any);
+  }, [mindMap, convertToFlowNodes, convertToFlowEdges, setRfNodes, setRfEdges]);
 
   // Handle node clicks
   const onNodeClick = useCallback(
-    (event: React.MouseEvent, node: Node) => {
+    (event: React.MouseEvent, node: RFNode) => {
       event.preventDefault();
       event.stopPropagation();
 
@@ -203,7 +199,7 @@ export function MindMapEditor({ mindMapId, onClose }: MindMapEditorProps) {
         return;
       }
 
-      const position = reactFlowInstance?.project({
+      const position = reactFlowInstance?.screenToFlowPosition({
         x: event.clientX - reactFlowBounds.left,
         y: event.clientY - reactFlowBounds.top,
       });
@@ -278,10 +274,10 @@ export function MindMapEditor({ mindMapId, onClose }: MindMapEditorProps) {
     <div className="h-full w-full relative">
       <ReactFlowProvider>
         <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
+          nodes={rfNodes}
+          edges={rfEdges}
+          onNodesChange={onNodesChange as any}
+          onEdgesChange={onEdgesChange as any}
           onConnect={onConnect}
           onNodeClick={onNodeClick}
           onPaneClick={onPaneClick}

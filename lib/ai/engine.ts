@@ -201,9 +201,8 @@ export class AIMapEngine {
       const existingNode = await db.mapNode.findUnique({
         where: { id: request.nodeId },
         include: {
-          mindMap: true,
-          parent: true,
           children: true,
+          citations: true,
         },
       });
       
@@ -212,9 +211,7 @@ export class AIMapEngine {
       }
       
       // Get context from parent
-      const parentContext = existingNode.parent ? 
-        `Parent: ${existingNode.parent.title} - ${existingNode.parent.content}` :
-        `Mind Map: ${existingNode.mindMap.title}`;
+      const parentContext = `Node in mind map expansion with ${existingNode.children?.length || 0} existing children`;
       
       // Create generation job
       const job = await db.generationJob.create({
@@ -275,12 +272,20 @@ export class AIMapEngine {
         // Create child nodes if provided
         let createdChildren: MapNodeData[] = [];
         if (parsedData.children && parsedData.children.length > 0) {
-          createdChildren = await this.createChildNodes(
-            parsedData.children,
-            request.nodeId,
-            existingNode.mindMapId,
-            existingNode.level + 1
-          );
+          // Get mindMapId from existingNode
+          const parentNode = await db.mapNode.findUnique({
+            where: { id: request.nodeId },
+            select: { mindMapId: true },
+          });
+          
+          if (parentNode) {
+            createdChildren = await this.createChildNodes(
+              parsedData.children,
+              request.nodeId,
+              parentNode.mindMapId,
+              existingNode.level + 1
+            );
+          }
         }
         
         await db.generationJob.update({
@@ -612,25 +617,15 @@ export class AIMapEngine {
       const provider = request.provider || 'openai';
       const adapter = await this.getProviderAdapter(provider, request.userId);
       
-      // Get the existing mind map with the node
-      const mindMap = await db.mindMap.findUnique({
-        where: { id: mindMapId },
+      // Get the existing node
+      const existingNode = await db.mapNode.findUnique({
+        where: { id: request.nodeId },
         include: {
-          nodes: {
-            where: { id: request.nodeId },
-            include: {
-              children: true,
-              parent: true,
-            },
-          },
+          children: true,
+          citations: true,
         },
       });
       
-      if (!mindMap) {
-        throw new Error(`Mind map not found: ${mindMapId}`);
-      }
-      
-      const existingNode = mindMap.nodes[0];
       if (!existingNode) {
         throw new Error(`Node not found: ${request.nodeId}`);
       }
@@ -655,9 +650,7 @@ export class AIMapEngine {
       
       try {
         const complexity = request.complexity || 'moderate';
-        const parentContext = existingNode.parent ? 
-          `Parent: ${existingNode.parent.title} - ${existingNode.parent.content}` :
-          `This is a root-level node in the mind map: ${mindMap.title}`;
+        const parentContext = `Node in mind map regeneration with ${existingNode.children?.length || 0} existing children`;
         
         const variables = {
           nodeTitle: existingNode.title || 'Untitled',
@@ -701,13 +694,21 @@ export class AIMapEngine {
             where: { parentId: request.nodeId },
           });
           
-          // Create new children
-          createdChildren = await this.createChildNodes(
-            parsedData.children,
-            request.nodeId,
-            mindMapId,
-            existingNode.level + 1
-          );
+          // Get mindMapId from existingNode
+          const parentNode = await db.mapNode.findUnique({
+            where: { id: request.nodeId },
+            select: { mindMapId: true },
+          });
+          
+          if (parentNode) {
+            // Create new children
+            createdChildren = await this.createChildNodes(
+              parsedData.children,
+              request.nodeId,
+              parentNode.mindMapId,
+              existingNode.level + 1
+            );
+          }
         }
         
         await db.generationJob.update({

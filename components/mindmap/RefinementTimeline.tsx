@@ -24,7 +24,7 @@ export interface RefinementStep {
   timestamp: Date;
   description: string;
   result?: unknown;
-  error?: string;
+  error?: string | unknown;
   isVisible: boolean;
 }
 
@@ -63,7 +63,7 @@ export function RefinementTimeline({ onClose, steps: externalSteps }: Refinement
       case 'pending':
         return Clock;
       case 'processing':
-        return <div className="animate-spin rounded-full h-3 w-3 border-b border-blue-500" />;
+        return Clock; // We'll render the spinner separately
       case 'completed':
         return CheckCircle;
       case 'failed':
@@ -174,7 +174,7 @@ export function RefinementTimeline({ onClose, steps: externalSteps }: Refinement
           ) : (
             steps.map((step) => {
               const Icon = getStepIcon(step);
-              const StatusIcon = getStatusIcon(step.status);
+              const StatusIconComponent = getStatusIcon(step.status);
               
               return (
                 <div
@@ -211,14 +211,18 @@ export function RefinementTimeline({ onClose, steps: externalSteps }: Refinement
                         </div>
                         
                         <div className={`flex-shrink-0 ml-2 ${getStatusColor(step.status)}`}>
-                          <StatusIcon className="h-3 w-3" />
+                          {step.status === 'processing' ? (
+                            <div className="animate-spin rounded-full h-3 w-3 border-b border-blue-500" />
+                          ) : (
+                            <StatusIconComponent className="h-3 w-3" />
+                          )}
                         </div>
                       </div>
                       
                       {/* Error message */}
                       {step.error && (
                         <div className="mt-2 p-2 bg-red-100 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded text-xs text-red-700 dark:text-red-400">
-                          {step.error}
+                          {(step.error as any) || 'An error occurred'}
                         </div>
                       )}
                       

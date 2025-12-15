@@ -59,7 +59,12 @@ export async function POST(
         },
       },
       include: {
-        rootNodes: true,
+        nodes: {
+          include: {
+            children: true,
+            parent: true,
+          },
+        },
         workspace: {
           include: {
             members: {
@@ -75,21 +80,7 @@ export async function POST(
     }
     
     // Find the target node
-    let targetNode: MapNodeData | null = null;
-    const findNode = (nodes: MapNodeData[]): boolean => {
-      for (const node of nodes) {
-        if (node.id === validated.nodeId) {
-          targetNode = node;
-          return true;
-        }
-        if (node.children && node.children.length > 0) {
-          if (findNode(node.children)) return true;
-        }
-      }
-      return false;
-    };
-    
-    findNode(mindMap.rootNodes);
+    const targetNode = mindMap.nodes.find(node => node.id === validated.nodeId);
     
     if (!targetNode) {
       throw new ApiError(404, 'Target node not found');
@@ -128,39 +119,8 @@ export async function POST(
       throw new ApiError(500, result.error || 'Expansion failed');
     }
     
-    // Update the mind map with the expanded node
-    const updateNodeInTree = (nodes: MapNodeData[]): MapNodeData[] => {
-      return nodes.map((node) => {
-        if (node.id === validated.nodeId) {
-          return {
-            ...node,
-            ...result.data,
-          };
-        }
-        if (node.children) {
-          return {
-            ...node,
-            children: updateNodeInTree(node.children),
-          };
-        }
-        return node;
-      });
-    };
-    
-    const updatedRootNodes = updateNodeInTree(mindMap.rootNodes);
-    
-    // Update the mind map in the database
-    await db.mindMap.update({
-      where: { id: mindMapId },
-      data: {
-        rootNodes: updatedRootNodes,
-        metadata: {
-          ...mindMap.metadata,
-          totalNodes: mindMap.metadata.totalNodes + (result.data?.children?.length || 0),
-          updatedAt: new Date(),
-        },
-      },
-    });
+    // The AI engine already handles updating the database with new nodes
+    // We just need to return the success response
     
     // Return the expanded node data
     return NextResponse.json({

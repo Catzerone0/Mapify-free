@@ -83,7 +83,7 @@ export async function GET(
         id: String(dbNode.id),
         title: dbNode.title ? String(dbNode.title) : undefined,
         content: String(dbNode.content),
-        parentId,
+        parentId: parentId || undefined,
         level: Number(dbNode.level),
         order: Number(dbNode.order),
         visual: {
@@ -113,6 +113,32 @@ export async function GET(
       .filter(node => !node.parentId)
       .map(node => convertNodeToApiFormat(node));
     
+    // Calculate metadata from nodes
+    const calculateMetadata = (nodes: unknown[]) => {
+      const totalNodes = mindMap.nodes.length;
+      let maxDepth = 0;
+      
+      const findMaxDepth = (nodeList: unknown[], depth = 0): number => {
+        let currentMax = depth;
+        for (const node of nodeList) {
+          const dbNode = node as Record<string, unknown>;
+          if (dbNode.children && Array.isArray(dbNode.children) && dbNode.children.length > 0) {
+            currentMax = Math.max(currentMax, findMaxDepth(dbNode.children, depth + 1));
+          }
+        }
+        return currentMax;
+      };
+      
+      maxDepth = findMaxDepth(rootNodes);
+      
+      return {
+        totalNodes,
+        maxDepth,
+        createdAt: mindMap.createdAt || undefined,
+        updatedAt: mindMap.updatedAt || undefined,
+      };
+    };
+
     const mindMapData: MindMapData = {
       id: mindMap.id,
       title: mindMap.title,
@@ -122,12 +148,7 @@ export async function GET(
       provider: mindMap.provider || undefined,
       complexity: mindMap.complexity as 'simple' | 'moderate' | 'complex',
       rootNodes,
-      metadata: {
-        totalNodes: mindMap.metadata.totalNodes,
-        maxDepth: mindMap.metadata.maxDepth,
-        createdAt: mindMap.metadata.createdAt || undefined,
-        updatedAt: mindMap.metadata.updatedAt || undefined,
-      },
+      metadata: calculateMetadata(rootNodes),
     };
     
     return NextResponse.json({
@@ -193,7 +214,7 @@ export async function PATCH(
       throw new ApiError(403, 'Mind map not found or access denied');
     }
     
-    // Update mind map metadata
+    // Update mind map basic fields
     await db.mindMap.update({
       where: { id: mindMapId },
       data: {
@@ -203,12 +224,7 @@ export async function PATCH(
         prompt: validated.mindMap.prompt,
         provider: validated.mindMap.provider,
         complexity: validated.mindMap.complexity,
-        metadata: {
-          ...existingMindMap.metadata,
-          totalNodes: validated.mindMap.metadata.totalNodes,
-          maxDepth: validated.mindMap.metadata.maxDepth,
-          updatedAt: new Date(),
-        },
+        updatedAt: new Date(),
       },
     });
     
