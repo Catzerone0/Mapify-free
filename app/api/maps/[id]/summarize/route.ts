@@ -1,5 +1,5 @@
 /**
- * Summarize mind map API endpoint
+ * Summarize an existing mind map
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -11,7 +11,8 @@ import { SummarizationRequest } from '@/lib/ai/types';
 import { ApiError } from '@/lib/errors';
 import { rateLimiter } from '@/lib/rate-limit';
 
-const SummarizeSchema = z.object({
+const SummarizationSchema = z.object({
+  mindMapId: z.string().min(1, 'Mind map ID is required'),
   provider: z.enum(['openai', 'gemini', 'anthropic']).optional(),
 });
 
@@ -20,14 +21,14 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: mindMapId } = await params;
+    const { id: mindMapIdFromParams } = await params;
     
     // Apply rate limiting
     const clientIp = request.headers.get('x-forwarded-for') || 'unknown';
-    const rateLimitKey = `maps:${mindMapId}:summarize:${clientIp}`;
+    const rateLimitKey = `maps:summarize:${clientIp}`;
     
     try {
-      rateLimiter.check(rateLimitKey, { windowMs: 60000, maxRequests: 5 });
+      rateLimiter.check(rateLimitKey, { windowMs: 60000, maxRequests: 3 });
     } catch {
       throw new ApiError(429, 'Rate limit exceeded');
     }
@@ -38,14 +39,21 @@ export async function POST(
       throw new ApiError(401, 'Unauthorized');
     }
     
-    // Get mind map to validate access
-    const mindMap = await db.mindMap.findUnique({
-      where: { id: mindMapId },
-      include: {
+    // Parse and validate request body
+    const body = await request.json();
+    const validated = SummarizationSchema.parse(body);
+    
+    // Use mind map ID from params or request body
+    const mindMapId = mindMapIdFromParams || validated.mindMapId;
+    
+    // Validate access to the mind map
+    const mindMap = await db.mindMap.findFirst({
+      where: {
+        id: mindMapId,
         workspace: {
-          include: {
-            members: {
-              where: { userId: session.user.id },
+          members: {
+            some: {
+              userId: session.user.id!,
             },
           },
         },
@@ -53,16 +61,8 @@ export async function POST(
     });
     
     if (!mindMap) {
-      throw new ApiError(404, 'Mind map not found');
+      throw new ApiError(403, 'Mind map not found or access denied');
     }
-    
-    if (mindMap.workspace.members.length === 0) {
-      throw new ApiError(403, 'Access denied');
-    }
-    
-    // Parse and validate request body
-    const body = await request.json();
-    const validated = SummarizeSchema.parse(body);
     
     // Validate provider access
     const provider = validated.provider || 'openai';
@@ -77,16 +77,6 @@ export async function POST(
     
     if (!userKey) {
       throw new ApiError(400, `No API key found for provider ${provider}`);
-    }
-    
-    // Check if summary already exists and is recent (less than 1 hour old)
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-    if (mindMap.summary && mindMap.updatedAt > oneHourAgo) {
-      return NextResponse.json({
-        success: true,
-        summary: mindMap.summary,
-        cached: true,
-      });
     }
     
     // Create summarization request
@@ -110,7 +100,6 @@ export async function POST(
       summary: result.summary,
       tokensUsed: result.tokensUsed,
       provider: result.provider,
-      cached: false,
     });
     
   } catch (error) {

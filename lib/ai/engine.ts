@@ -192,7 +192,7 @@ export class AIMapEngine {
   /**
    * Expand an existing node with more detail
    */
-  async expandNode(request: ExpansionRequest): Promise<ExpansionResult> {
+  async expandNode(mindMapId: string, request: ExpansionRequest): Promise<ExpansionResult> {
     try {
       const provider = request.provider || 'openai';
       const adapter = await this.getProviderAdapter(provider, request.userId);
@@ -602,5 +602,168 @@ export class AIMapEngine {
     }
     
     return result;
+  }
+  
+  /**
+   * Regenerate a specific node and its subtree
+   */
+  async regenerateNode(mindMapId: string, request: ExpansionRequest): Promise<ExpansionResult> {
+    try {
+      const provider = request.provider || 'openai';
+      const adapter = await this.getProviderAdapter(provider, request.userId);
+      
+      // Get the existing mind map with the node
+      const mindMap = await db.mindMap.findUnique({
+        where: { id: mindMapId },
+        include: {
+          nodes: {
+            where: { id: request.nodeId },
+            include: {
+              children: true,
+              parent: true,
+            },
+          },
+        },
+      });
+      
+      if (!mindMap) {
+        throw new Error(`Mind map not found: ${mindMapId}`);
+      }
+      
+      const existingNode = mindMap.nodes[0];
+      if (!existingNode) {
+        throw new Error(`Node not found: ${request.nodeId}`);
+      }
+      
+      // Create generation job
+      const job = await db.generationJob.create({
+        data: {
+          nodeId: request.nodeId,
+          prompt: `Regenerate node: ${existingNode.title || existingNode.content.substring(0, 100)}`,
+          provider,
+          status: 'pending',
+        },
+      });
+      
+      await db.generationJob.update({
+        where: { id: job.id },
+        data: { 
+          status: 'processing',
+          startedAt: new Date(),
+        },
+      });
+      
+      try {
+        const complexity = request.complexity || 'moderate';
+        const parentContext = existingNode.parent ? 
+          `Parent: ${existingNode.parent.title} - ${existingNode.parent.content}` :
+          `This is a root-level node in the mind map: ${mindMap.title}`;
+        
+        const variables = {
+          nodeTitle: existingNode.title || 'Untitled',
+          nodeContent: existingNode.content,
+          parentContext,
+          focusPrompt: request.prompt || 'Provide a comprehensive and accurate representation of this topic',
+          instructions: `Regenerate this node with improved clarity and detail while maintaining the same depth level.`,
+        };
+        
+        const { systemPrompt, userPrompt } = generatePrompt('node-regeneration', variables, complexity);
+        
+        const response = await adapter.generateResponse(userPrompt, {
+          systemPrompt,
+          model: getProviderConfig(provider).models.reasoning,
+          maxTokens: getProviderConfig(provider).maxTokens.reasoning,
+          temperature: 0.7,
+        });
+        
+        let parsedData: { title?: string; content?: string; children?: MapNodeData[] };
+        try {
+          parsedData = JSON.parse(response.content);
+        } catch (parseError) {
+          throw new Error(`Failed to parse regeneration response: ${parseError}`);
+        }
+        
+        // Update the existing node
+        await db.mapNode.update({
+          where: { id: request.nodeId },
+          data: {
+            title: parsedData.title || existingNode.title,
+            content: parsedData.content || existingNode.content,
+            updatedAt: new Date(),
+          },
+        });
+        
+        // If new children are provided, replace the existing children
+        let createdChildren: MapNodeData[] = [];
+        if (parsedData.children && parsedData.children.length > 0) {
+          // Delete existing children
+          await db.mapNode.deleteMany({
+            where: { parentId: request.nodeId },
+          });
+          
+          // Create new children
+          createdChildren = await this.createChildNodes(
+            parsedData.children,
+            request.nodeId,
+            mindMapId,
+            existingNode.level + 1
+          );
+        }
+        
+        await db.generationJob.update({
+          where: { id: job.id },
+          data: {
+            status: 'completed',
+            result: JSON.parse(JSON.stringify({
+              updatedNode: {
+                id: request.nodeId,
+                ...parsedData,
+              },
+              createdChildren,
+            })),
+            tokensUsed: response.tokensUsed,
+            completedAt: new Date(),
+          },
+        });
+        
+        return {
+          success: true,
+          data: {
+            id: request.nodeId,
+            title: parsedData.title || existingNode.title || undefined,
+            content: parsedData.content || existingNode.content,
+            level: existingNode.level,
+            order: existingNode.order,
+            visual: {
+              x: existingNode.x,
+              y: existingNode.y,
+              width: existingNode.width,
+              height: existingNode.height,
+              color: existingNode.color || undefined,
+              shape: existingNode.shape as 'rectangle' | 'circle' | 'diamond' | 'hexagon',
+              isCollapsed: existingNode.isCollapsed,
+            },
+            citations: [],
+            children: createdChildren,
+          },
+          tokensUsed: response.tokensUsed,
+          provider: response.provider,
+        };
+      } catch (regenerationError) {
+        await db.generationJob.update({
+          where: { id: job.id },
+          data: {
+            status: 'failed',
+            error: regenerationError instanceof Error ? regenerationError.message : 'Regeneration failed',
+          },
+        });
+        throw regenerationError;
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
   }
 }

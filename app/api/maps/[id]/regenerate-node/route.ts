@@ -1,5 +1,5 @@
 /**
- * Expand an existing node with AI-generated children
+ * Regenerate a specific node and its subtree
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -11,10 +11,9 @@ import { ExpansionRequest, MapNodeData } from '@/lib/ai/types';
 import { ApiError } from '@/lib/errors';
 import { rateLimiter } from '@/lib/rate-limit';
 
-const ExpansionSchema = z.object({
+const RegenerationSchema = z.object({
   nodeId: z.string().min(1, 'Node ID is required'),
   prompt: z.string().optional(),
-  depth: z.number().min(1).max(5).optional(),
   complexity: z.enum(['simple', 'moderate', 'complex']).optional(),
   provider: z.enum(['openai', 'gemini', 'anthropic']).optional(),
 });
@@ -28,10 +27,10 @@ export async function POST(
     
     // Apply rate limiting
     const clientIp = request.headers.get('x-forwarded-for') || 'unknown';
-    const rateLimitKey = `maps:expand:${clientIp}`;
+    const rateLimitKey = `maps:regenerate:${clientIp}`;
     
     try {
-      rateLimiter.check(rateLimitKey, { windowMs: 60000, maxRequests: 5 });
+      rateLimiter.check(rateLimitKey, { windowMs: 60000, maxRequests: 3 });
     } catch {
       throw new ApiError(429, 'Rate limit exceeded');
     }
@@ -44,7 +43,7 @@ export async function POST(
     
     // Parse and validate request body
     const body = await request.json();
-    const validated = ExpansionSchema.parse(body);
+    const validated = RegenerationSchema.parse(body);
     
     // Validate access to the mind map
     const mindMap = await db.mindMap.findFirst({
@@ -110,11 +109,10 @@ export async function POST(
       throw new ApiError(400, `No API key found for provider ${provider}`);
     }
     
-    // Create expansion request
-    const expansionRequest: ExpansionRequest = {
+    // Create regeneration request (similar to expansion but regenerates the node itself)
+    const regenerationRequest: ExpansionRequest = {
       nodeId: validated.nodeId,
-      prompt: validated.prompt,
-      depth: validated.depth,
+      prompt: validated.prompt || `Regenerate this node: ${targetNode.title || targetNode.content}`,
       complexity: validated.complexity,
       provider: validated.provider,
       userId: session.user.id!,
@@ -122,13 +120,13 @@ export async function POST(
     
     // Start AI map engine
     const engine = new AIMapEngine();
-    const result = await engine.expandNode(mindMapId, expansionRequest);
+    const result = await engine.regenerateNode(mindMapId, regenerationRequest);
     
     if (!result.success) {
-      throw new ApiError(500, result.error || 'Expansion failed');
+      throw new ApiError(500, result.error || 'Regeneration failed');
     }
     
-    // Update the mind map with the expanded node
+    // Update the mind map with the regenerated node
     const updateNodeInTree = (nodes: MapNodeData[]): MapNodeData[] => {
       return nodes.map((node) => {
         if (node.id === validated.nodeId) {
@@ -156,13 +154,12 @@ export async function POST(
         rootNodes: updatedRootNodes,
         metadata: {
           ...mindMap.metadata,
-          totalNodes: mindMap.metadata.totalNodes + (result.data?.children?.length || 0),
           updatedAt: new Date(),
         },
       },
     });
     
-    // Return the expanded node data
+    // Return the regenerated node data
     return NextResponse.json({
       success: true,
       data: result.data,
@@ -189,7 +186,7 @@ export async function POST(
       );
     }
     
-    console.error('Node expansion error:', error);
+    console.error('Node regeneration error:', error);
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }
