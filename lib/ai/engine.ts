@@ -98,8 +98,8 @@ export class AIMapEngine {
           prompt: request.prompt,
           provider,
           status: 'pending',
-          result: null,
-          error: null,
+          result: undefined,
+          error: undefined,
         },
       });
       
@@ -136,7 +136,7 @@ export class AIMapEngine {
         // Parse and validate the response
         let parsedData: MindMapData;
         try {
-          const jsonResponse = JSON.parse(response.content) as Record<string, unknown>;
+          const jsonResponse = JSON.parse(response.content) as unknown;
           
           // Validate structure
           const validation = validateMindMap(jsonResponse);
@@ -144,7 +144,7 @@ export class AIMapEngine {
             throw new Error(`Invalid mind map structure: ${validation.errors.join(', ')}`);
           }
           
-          parsedData = jsonResponse;
+          parsedData = jsonResponse as MindMapData;
         } catch (parseError) {
           throw new Error(`Failed to parse AI response as JSON: ${parseError}`);
         }
@@ -157,7 +157,7 @@ export class AIMapEngine {
           where: { id: job.id },
           data: {
             status: 'completed',
-            result: parsedData,
+            result: JSON.parse(JSON.stringify(parsedData)),
             tokensUsed: response.tokensUsed,
             completedAt: new Date(),
           },
@@ -287,13 +287,13 @@ export class AIMapEngine {
           where: { id: job.id },
           data: {
             status: 'completed',
-            result: {
+            result: JSON.parse(JSON.stringify({
               updatedNode: {
                 id: request.nodeId,
                 ...parsedData,
               },
               createdChildren,
-            },
+            })),
             tokensUsed: response.tokensUsed,
             completedAt: new Date(),
           },
@@ -303,7 +303,7 @@ export class AIMapEngine {
           success: true,
           data: {
             id: request.nodeId,
-            title: parsedData.title || existingNode.title,
+            title: parsedData.title || existingNode.title || undefined,
             content: parsedData.content || existingNode.content,
             level: existingNode.level,
             order: existingNode.order,
@@ -590,14 +590,14 @@ export class AIMapEngine {
   /**
    * Build a string representation of the mind map structure
    */
-  private buildStructureString(nodes: Array<{ title: string | null; content: string; children?: Array<{ title: string | null; content: string; children?: Array<{ title: string | null; content: string; children?: Array<unknown> }> }> }>, level: number): string {
+  private buildStructureString(nodes: Array<{ title: string | null; content: string; children?: Array<{ title: string | null; content: string; children?: unknown[] }> }>, level: number): string {
     let result = '';
     const indent = '  '.repeat(level);
     
     for (const node of nodes) {
       result += `${indent}- ${node.title || 'Untitled'}: ${node.content.substring(0, 100)}...\\n`;
       if (node.children && node.children.length > 0) {
-        result += this.buildStructureString(node.children, level + 1);
+        result += this.buildStructureString(node.children as unknown as Array<{ title: string | null; content: string; children?: unknown[] }>, level + 1);
       }
     }
     

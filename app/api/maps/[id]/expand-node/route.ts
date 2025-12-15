@@ -9,7 +9,7 @@ import { auth } from '@/lib/auth';
 import { AIMapEngine } from '@/lib/ai/engine';
 import { ExpansionRequest } from '@/lib/ai/types';
 import { ApiError } from '@/lib/errors';
-import { rateLimiter, rateLimitConfigs } from '@/lib/rate-limit';
+import { rateLimiter } from '@/lib/rate-limit';
 
 const ExpandSchema = z.object({
   nodeId: z.string().min(1, 'Node ID is required'),
@@ -32,7 +32,7 @@ export async function POST(
     
     try {
       rateLimiter.check(rateLimitKey, { windowMs: 60000, maxRequests: 10 });
-    } catch (error) {
+    } catch {
       throw new ApiError(429, 'Rate limit exceeded');
     }
     
@@ -57,11 +57,11 @@ export async function POST(
     });
     
     if (!mindMap) {
-      throw new ApiError('Mind map not found', 404);
+      throw new ApiError(404, 'Mind map not found');
     }
     
     if (mindMap.workspace.members.length === 0) {
-      throw new ApiError('Access denied', 403);
+      throw new ApiError(403, 'Access denied');
     }
     
     // Parse and validate request body
@@ -74,7 +74,7 @@ export async function POST(
     });
     
     if (!node || node.mindMapId !== mindMapId) {
-      throw new ApiError('Node not found in this mind map', 404);
+      throw new ApiError(404, 'Node not found in this mind map');
     }
     
     // Validate provider access
@@ -82,14 +82,14 @@ export async function POST(
     const userKey = await db.userProviderKey.findUnique({
       where: {
         userId_provider: {
-          userId: session.user.id,
+          userId: session.user.id!,
           provider,
         },
       },
     });
     
     if (!userKey) {
-      throw new ApiError(`No API key found for provider ${provider}`, 400);
+      throw new ApiError(400, `No API key found for provider ${provider}`);
     }
     
     // Create expansion request
@@ -99,7 +99,7 @@ export async function POST(
       depth: validated.depth,
       complexity: validated.complexity,
       provider: validated.provider,
-      userId: session.user.id,
+      userId: session.user.id!,
     };
     
     // Start AI map engine
@@ -107,7 +107,7 @@ export async function POST(
     const result = await engine.expandNode(expansionRequest);
     
     if (!result.success) {
-      throw new ApiError(result.error || 'Node expansion failed', 500);
+      throw new ApiError(500, result.error || 'Node expansion failed');
     }
     
     // Return the expanded node

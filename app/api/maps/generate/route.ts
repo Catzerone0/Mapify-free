@@ -11,7 +11,7 @@ import {
   GenerationRequest
 } from '@/lib/ai/types';
 import { ApiError } from '@/lib/errors';
-import { rateLimiter, rateLimitConfigs } from '@/lib/rate-limit';
+import { rateLimiter } from '@/lib/rate-limit';
 
 const GenerationSchema = z.object({
   prompt: z.string().min(1, 'Prompt is required').max(2000, 'Prompt too long'),
@@ -30,14 +30,14 @@ export async function POST(request: NextRequest) {
     
     try {
       rateLimiter.check(rateLimitKey, { windowMs: 60000, maxRequests: 3 });
-    } catch (error) {
+    } catch {
       throw new ApiError(429, 'Rate limit exceeded');
     }
     
     // Authenticate user
     const session = await auth();
-    if (!session?.user) {
-      throw new ApiError('Unauthorized', 401);
+    if (!session?.user?.id) {
+      throw new ApiError(401, 'Unauthorized');
     }
     
     // Parse and validate request body
@@ -50,14 +50,14 @@ export async function POST(request: NextRequest) {
         id: validated.workspaceId,
         members: {
           some: {
-            userId: session.user.id,
+            userId: session.user.id!,
           },
         },
       },
     });
     
     if (!workspace) {
-      throw new ApiError('Workspace not found or access denied', 403);
+      throw new ApiError(403, 'Workspace not found or access denied');
     }
     
     // Validate provider access (user must have API key for the provider)
@@ -65,14 +65,14 @@ export async function POST(request: NextRequest) {
     const userKey = await db.userProviderKey.findUnique({
       where: {
         userId_provider: {
-          userId: session.user.id,
+          userId: session.user.id!,
           provider,
         },
       },
     });
     
     if (!userKey) {
-      throw new ApiError(`No API key found for provider ${provider}`, 400);
+      throw new ApiError(400, `No API key found for provider ${provider}`);
     }
     
     // Create generation request
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
       sources: validated.sources,
       complexity: validated.complexity,
       provider: validated.provider,
-      userId: session.user.id,
+      userId: session.user.id!,
       workspaceId: validated.workspaceId,
       existingMapId: validated.existingMapId,
     };
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
     const result = await engine.generateMindMap(generationRequest);
     
     if (!result.success) {
-      throw new ApiError(result.error || 'Generation failed', 500);
+      throw new ApiError(500, result.error || 'Generation failed');
     }
     
     // Return the generated mind map
