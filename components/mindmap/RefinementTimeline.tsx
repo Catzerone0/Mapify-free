@@ -222,7 +222,7 @@ export function RefinementTimeline({ onClose, steps: externalSteps }: Refinement
                       {/* Error message */}
                       {step.error && (
                         <div className="mt-2 p-2 bg-red-100 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded text-xs text-red-700 dark:text-red-400">
-                          {(step.error as any) || 'An error occurred'}
+                          {typeof step.error === 'string' ? step.error : 'An error occurred'}
                         </div>
                       )}
                       

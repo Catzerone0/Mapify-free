@@ -8,7 +8,7 @@ import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { ingestionService } from '@/lib/ingest/service';
 import { apiResponse, apiError } from '@/lib/api-response';
-import { AuthError, NotFoundError } from '@/lib/errors';
+import { AuthenticationError, NotFoundError } from '@/lib/errors';
 import { logger } from '@/lib/logger';
 
 export async function GET(
@@ -19,7 +19,7 @@ export async function GET(
     // Authenticate user
     const session = await getSession(req);
     if (!session) {
-      throw new AuthError('Authentication required');
+      throw new AuthenticationError('Authentication required');
     }
 
     const { id } = await context.params;
@@ -47,7 +47,7 @@ export async function GET(
     });
 
     if (!member) {
-      throw new AuthError('Access denied');
+      throw new AuthenticationError('Access denied');
     }
 
     return apiResponse({
@@ -61,7 +61,7 @@ export async function GET(
       updatedAt: contentSource.updatedAt,
     });
   } catch (error) {
-    if (error instanceof AuthError) {
+    if (error instanceof AuthenticationError) {
       return apiError(error.message, 401);
     }
     if (error instanceof NotFoundError) {
@@ -81,7 +81,7 @@ export async function DELETE(
     // Authenticate user
     const session = await getSession(req);
     if (!session) {
-      throw new AuthError('Authentication required');
+      throw new AuthenticationError('Authentication required');
     }
 
     const { id } = await context.params;
@@ -106,7 +106,7 @@ export async function DELETE(
     });
 
     if (!member) {
-      throw new AuthError('Access denied');
+      throw new AuthenticationError('Access denied');
     }
 
     // Delete content source
@@ -121,7 +121,7 @@ export async function DELETE(
       message: 'Content source deleted successfully',
     });
   } catch (error) {
-    if (error instanceof AuthError) {
+    if (error instanceof AuthenticationError) {
       return apiError(error.message, 401);
     }
     if (error instanceof NotFoundError) {

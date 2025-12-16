@@ -1,7 +1,7 @@
 /**
  * Content ingestion service - orchestrates the ingestion pipeline
  */
-import { prisma } from '@/lib/db';
+import { db as prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { queueManager, JobType } from '@/lib/queue';
 import { TextConnector } from './connectors/text';

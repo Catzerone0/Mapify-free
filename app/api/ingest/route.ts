@@ -8,7 +8,7 @@ import { getSession } from '@/lib/auth';
 import { ingestionService } from '@/lib/ingest/service';
 import { IngestRequestSchema } from '@/lib/ingest/validation';
 import { apiResponse, apiError } from '@/lib/api-response';
-import { AuthError, ValidationError } from '@/lib/errors';
+import { AuthenticationError, ValidationError } from '@/lib/errors';
 import { applyRateLimit } from '@/lib/rate-limit';
 import { logger } from '@/lib/logger';
 import type { SourceType, SourcePayload } from '@/lib/ingest/types';
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // Authenticate user
     const session = await getSession(req);
     if (!session) {
-      throw new AuthError('Authentication required');
+      throw new AuthenticationError('Authentication required');
     }
 
     // Parse request body
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       message: 'Ingestion job created successfully',
     });
   } catch (error) {
-    if (error instanceof AuthError) {
+    if (error instanceof AuthenticationError) {
       return apiError(error.message, 401);
     }
     if (error instanceof ValidationError) {
@@ -72,7 +72,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     // Authenticate user
     const session = await getSession(req);
     if (!session) {
-      throw new AuthError('Authentication required');
+      throw new AuthenticationError('Authentication required');
     }
 
     // Get query parameters
@@ -94,7 +94,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
     return apiResponse(result);
   } catch (error) {
-    if (error instanceof AuthError) {
+    if (error instanceof AuthenticationError) {
       return apiError(error.message, 401);
     }
     if (error instanceof ValidationError) {
