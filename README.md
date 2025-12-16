@@ -19,6 +19,13 @@ A production-ready Next.js 16 application with authentication, database layer (P
   - Rate limiting
   - API response formatting
   - Health check endpoint
+- **Content Ingestion Pipeline** (NEW):
+  - Multi-source content ingestion (Text, YouTube, PDF, Web, WebSearch)
+  - Background job processing with BullMQ
+  - Chunking and normalization for LLM consumption
+  - Status tracking and error handling
+  - Citation generation and source attribution
+  - Comprehensive testing suite
 
 ### 🎯 Nice-to-Have (Future)
 - Multi-tenant organizations
@@ -42,8 +49,14 @@ A production-ready Next.js 16 application with authentication, database layer (P
 - **Framework**: Next.js API Routes
 - **Database**: PostgreSQL with Prisma ORM
 - **Authentication**: NextAuth v5 (beta)
-- **Jobs**: BullMQ (configured, not required for MVP)
+- **Jobs**: BullMQ for background processing
 - **Encryption**: CryptoJS for API key encryption
+- **Content Processing**:
+  - `youtube-transcript` for YouTube video transcripts
+  - `pdf-parse` for PDF text extraction
+  - `@mozilla/readability` for web page content extraction
+  - `jsdom` for HTML parsing
+  - `cheerio` for web scraping
 
 ### DevTools
 - **Testing**: Ready for Jest/Vitest
@@ -453,6 +466,47 @@ Run: `npm run db:migrate:deploy`
 - [ ] NEXTAUTH_SECRET is random and secure
 - [ ] ENCRYPTION_KEY is random and secure
 
+## Content Ingestion Pipeline
+
+The application includes a comprehensive content ingestion system for processing multiple content sources. See `INGESTION_PIPELINE.md` for full documentation.
+
+### Quick Start
+
+```typescript
+import { ingestionService } from '@/lib/ingest';
+
+// Ingest content
+const ingestionId = await ingestionService.createIngestionJob({
+  workspaceId: 'workspace_id',
+  userId: 'user_id',
+  sourceType: 'youtube',
+  payload: {
+    url: 'https://www.youtube.com/watch?v=VIDEO_ID',
+    videoId: 'VIDEO_ID',
+  },
+});
+
+// Get processed content
+const content = await ingestionService.getProcessedContent(ingestionId);
+```
+
+### Supported Sources
+
+- **Text**: Direct text paste with normalization
+- **YouTube**: Automatic transcript extraction
+- **PDF**: Text extraction from PDF documents
+- **Web**: Content extraction from web pages
+- **WebSearch**: Aggregated search results (Tavily, SerpAPI, Bing)
+
+### API Endpoints
+
+- `POST /api/ingest` - Create ingestion job
+- `GET /api/ingest` - List content sources
+- `GET /api/ingest/[id]/status` - Poll ingestion status
+- `GET /api/ingest/[id]/content` - Retrieve processed content
+
+See `INGESTION_PIPELINE.md` and `INGESTION_INTEGRATION.md` for complete documentation.
+
 ## Contributing
 
 This is a full-stack foundation ready for feature development. Key areas for contribution:
@@ -460,8 +514,9 @@ This is a full-stack foundation ready for feature development. Key areas for con
 1. **MindMap Features**: Node editing, canvas rendering, export functionality
 2. **Collaboration**: Real-time sync, sharing, permissions
 3. **LLM Integration**: Use saved keys for AI features
-4. **UI/UX**: Enhanced components, animations, accessibility
-5. **Testing**: Unit tests, integration tests, E2E tests
+4. **Content Sources**: Additional ingestion connectors (email, RSS, audio)
+5. **UI/UX**: Enhanced components, animations, accessibility
+6. **Testing**: Unit tests, integration tests, E2E tests
 
 ## License
 

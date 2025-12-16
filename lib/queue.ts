@@ -8,6 +8,7 @@ export enum JobType {
   PROCESS_MINDMAP = "process-mindmap",
   EXPORT_DATA = "export-data",
   CLEANUP_SESSIONS = "cleanup-sessions",
+  INGEST_CONTENT = "ingest-content",
 }
 
 interface EmailJob {
@@ -17,8 +18,9 @@ interface EmailJob {
 }
 
 interface MindMapJob {
-  mindMapId: string;
-  workspaceId: string;
+  mindMapId?: string;
+  workspaceId?: string;
+  ingestionId?: string;
 }
 
 interface ExportJob {
@@ -26,7 +28,11 @@ interface ExportJob {
   format: "pdf" | "json" | "markdown";
 }
 
-type JobData = EmailJob | MindMapJob | ExportJob;
+interface IngestionJob {
+  ingestionId: string;
+}
+
+type JobData = EmailJob | MindMapJob | ExportJob | IngestionJob;
 
 class QueueManager {
   private queues: Map<JobType, Queue> = new Map();
