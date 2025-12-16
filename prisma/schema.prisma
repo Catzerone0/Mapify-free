@@ -18,9 +18,10 @@ model User {
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 
-  workspaces    WorkspaceMember[]
-  providerKeys  UserProviderKey[]
-  sessions      Session[]
+  workspaces     WorkspaceMember[]
+  providerKeys   UserProviderKey[]
+  sessions       Session[]
+  contentSources ContentSource[]
 
   @@index([email])
 }
@@ -43,9 +44,10 @@ model Workspace {
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 
-  members   WorkspaceMember[]
-  mindMaps  MindMap[]
-  templates Template[]
+  members        WorkspaceMember[]
+  mindMaps       MindMap[]
+  templates      Template[]
+  contentSources ContentSource[]
 
   @@index([createdAt])
 }
@@ -194,4 +196,32 @@ model UserProviderKey {
 
   @@unique([userId, provider])
   @@index([userId])
+}
+
+model ContentSource {
+  id               String   @id @default(cuid())
+  workspaceId      String
+  userId           String
+  sourceType       String   // "text" | "youtube" | "pdf" | "web" | "websearch"
+  status           String   // "pending" | "processing" | "completed" | "failed"
+  rawPayload       Json     // Original input data
+  processedContent Json?    // Normalized chunks with metadata
+  metadata         Json?    // Title, URL, timestamps, author, etc.
+  error            String?  // Error message for failed ingestions
+  embeddings       Json?    // Vector embeddings (optional for now)
+  citations        Json?    // Source attribution
+  contentHash      String?  // For deduplication
+  sizeBytes        Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([userId])
+  @@index([status])
+  @@index([sourceType])
+  @@index([contentHash])
+  @@index([createdAt])
 }
