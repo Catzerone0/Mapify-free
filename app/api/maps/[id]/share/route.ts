@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { db as prisma } from '@/lib/db';
-import { requireAuth } from '@/lib/middleware';
+import { getAuthUser } from '@/lib/middleware';
 import { apiResponse, ApiError } from '@/lib/api-response';
 import { z } from 'zod';
 import bcrypt from 'bcrypt';
@@ -18,7 +18,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await requireAuth(req);
+    const user = await getAuthUser(req);
     const { id: mindMapId } = await params;
 
     // Verify user has access to this mind map
@@ -47,13 +47,13 @@ export async function POST(
     });
 
     if (!mindMap) {
-      throw new ApiError('Mind map not found', 404);
+      throw new ApiError(404, 'Mind map not found');
     }
 
     // Check if user is owner (only owners can create share links)
     const membership = mindMap.workspace.members[0];
     if (membership.role !== 'owner') {
-      throw new ApiError('Only workspace owners can create share links', 403);
+      throw new ApiError(403, 'Only workspace owners can create share links');
     }
 
     const body = await req.json();
@@ -99,7 +99,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await requireAuth(req);
+    const user = await getAuthUser(req);
     const { id: mindMapId } = await params;
 
     // Verify user has access to this mind map
@@ -117,7 +117,7 @@ export async function GET(
     });
 
     if (!mindMap) {
-      throw new ApiError('Mind map not found', 404);
+      throw new ApiError(404, 'Mind map not found');
     }
 
     const shareLinks = await prisma.shareLink.findMany({
@@ -160,7 +160,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await requireAuth(req);
+    const user = await getAuthUser(req);
     const { id: mindMapId } = await params;
     const { searchParams } = new URL(req.url);
     const linkId = searchParams.get('linkId');
@@ -181,7 +181,7 @@ export async function DELETE(
     });
 
     if (!mindMap) {
-      throw new ApiError('Mind map not found or insufficient permissions', 404);
+      throw new ApiError(404, 'Mind map not found or insufficient permissions');
     }
 
     if (linkId) {

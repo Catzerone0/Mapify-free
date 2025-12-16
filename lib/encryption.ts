@@ -19,6 +19,9 @@ export function decryptApiKey(ciphertext: string): string {
   return decrypted.toString(CryptoJS.enc.Utf8);
 }
 
+// Alias for backward compatibility
+export const decryptKey = decryptApiKey;
+
 /**
  * Validates that a decrypted key is not empty
  */

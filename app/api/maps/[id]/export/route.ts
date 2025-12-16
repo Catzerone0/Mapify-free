@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db as prisma } from '@/lib/db';
-import { requireAuth } from '@/lib/middleware';
+import { getAuthUser } from '@/lib/middleware';
 import { apiResponse, ApiError } from '@/lib/api-response';
 import { ExportService } from '@/lib/export/export-service';
 
@@ -10,7 +10,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await requireAuth(req);
+    const user = await getAuthUser(req);
     const { id: mindMapId } = await params;
     const { searchParams } = new URL(req.url);
     const format = searchParams.get('format') || 'markdown';
@@ -30,7 +30,7 @@ export async function GET(
     });
 
     if (!mindMap) {
-      throw new ApiError('Mind map not found', 404);
+      throw new ApiError(404, 'Mind map not found');
     }
 
     let exportResult;
@@ -46,7 +46,7 @@ export async function GET(
         exportResult = await ExportService.exportToJSON(mindMapId);
         break;
       default:
-        throw new ApiError('Invalid export format', 400);
+        throw new ApiError(400, 'Invalid export format');
     }
 
     // Return as downloadable file

@@ -24,7 +24,7 @@ export interface RefinementStep {
   timestamp: Date;
   description: string;
   result?: unknown;
-  error?: string | unknown;
+  error?: string;
   isVisible: boolean;
 }
 
@@ -219,15 +219,12 @@ export function RefinementTimeline({ onClose, steps: externalSteps }: Refinement
                         </div>
                       </div>
                       
-                      {/* Error message */}
                       {step.error && (
                         <div className="mt-2 p-2 bg-red-100 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded text-xs text-red-700 dark:text-red-400">
-                          {typeof step.error === 'string' ? step.error : 'An error occurred'}
+                          {step.error}
                         </div>
                       )}
-                      
-                      {/* Result preview */}
-                      {step.result && step.status === 'completed' && (
+                      {step.result && step.status === 'completed' ? (
                         <div className="mt-2">
                           <button
                             onClick={() => toggleStepVisibility(step.id)}
@@ -258,10 +255,9 @@ export function RefinementTimeline({ onClose, steps: externalSteps }: Refinement
                             </div>
                           )}
                         </div>
-                      )}
+                      ) : null}
                       
-                      {/* Action buttons for completed steps */}
-                      {step.status === 'completed' && step.result && (
+                      {step.status === 'completed' && step.result ? (
                         <div className="flex gap-2 mt-2">
                           <Button
                             onClick={() => handleAcceptStep(step)}
@@ -280,7 +276,7 @@ export function RefinementTimeline({ onClose, steps: externalSteps }: Refinement
                             Reject
                           </Button>
                         </div>
-                      )}
+                      ) : null}
                     </div>
                   </div>
                 </div>

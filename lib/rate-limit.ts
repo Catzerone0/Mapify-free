@@ -57,3 +57,19 @@ export const rateLimitConfigs = {
   // LLM API key operations: 10 requests per minute
   llmKeys: { windowMs: 60000, maxRequests: 10 },
 };
+
+// Apply rate limit helper for Next.js API routes
+export async function applyRateLimit(
+  req: Request,
+  config: RateLimitConfig
+): Promise<{ success: boolean; remaining?: number }> {
+  // Get client IP or use a default key
+  const clientIp = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'default';
+  const key = `ratelimit:${clientIp}`;
+  
+  const allowed = rateLimiter.isAllowed(key, config);
+  
+  return {
+    success: allowed,
+  };
+}

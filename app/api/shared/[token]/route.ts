@@ -33,12 +33,12 @@ export async function GET(
     });
 
     if (!shareLink) {
-      throw new ApiError('Share link not found', 404);
+      throw new ApiError(404, 'Share link not found');
     }
 
     // Check if link has expired
     if (shareLink.expiresAt && shareLink.expiresAt < new Date()) {
-      throw new ApiError('Share link has expired', 403);
+      throw new ApiError(403, 'Share link has expired');
     }
 
     // Verify password if required
@@ -53,16 +53,17 @@ export async function GET(
 
       const isValidPassword = await bcrypt.compare(password, shareLink.password);
       if (!isValidPassword) {
-        throw new ApiError('Invalid password', 403);
+        throw new ApiError(403, 'Invalid password');
       }
     }
 
     // Build the mind map data structure
     interface SharedNode {
       id: string;
+      parentId: string | null;
       title: string | null;
       content: string;
-      parentId: string | null;
+      level: number;
       order: number;
       x: number;
       y: number;
@@ -82,17 +83,18 @@ export async function GET(
         .sort((a, b) => a.order - b.order)
         .map((node) => ({
           id: node.id,
+          parentId: node.parentId,
           title: node.title,
           content: node.content,
-          visual: {
-            x: node.x,
-            y: node.y,
-            width: node.width,
-            height: node.height,
-            color: node.color,
-            shape: node.shape,
-            isCollapsed: node.isCollapsed,
-          },
+          level: node.level,
+          order: node.order,
+          x: node.x,
+          y: node.y,
+          width: node.width,
+          height: node.height,
+          color: node.color,
+          shape: node.shape,
+          isCollapsed: node.isCollapsed,
           citations: node.citations,
           attachments: node.attachments,
           children: buildNodeTree(nodes, node.id),
@@ -142,29 +144,29 @@ export async function PATCH(
     });
 
     if (!shareLink) {
-      throw new ApiError('Share link not found', 404);
+      throw new ApiError(404, 'Share link not found');
     }
 
     // Check if link has expired
     if (shareLink.expiresAt && shareLink.expiresAt < new Date()) {
-      throw new ApiError('Share link has expired', 403);
+      throw new ApiError(403, 'Share link has expired');
     }
 
     // Verify password if required
     if (shareLink.password) {
       if (!password) {
-        throw new ApiError('Password required', 401);
+        throw new ApiError(401, 'Password required');
       }
 
       const isValidPassword = await bcrypt.compare(password, shareLink.password);
       if (!isValidPassword) {
-        throw new ApiError('Invalid password', 403);
+        throw new ApiError(403, 'Invalid password');
       }
     }
 
     // Check if user has edit permissions
     if (shareLink.role !== 'editor' && shareLink.role !== 'owner') {
-      throw new ApiError('Insufficient permissions', 403);
+      throw new ApiError(403, 'Insufficient permissions');
     }
 
     // Update nodes

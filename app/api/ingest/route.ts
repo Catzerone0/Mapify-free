@@ -4,11 +4,10 @@
  * GET /api/ingest - List content sources
  */
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
+import { getAuthUser } from '@/lib/middleware';
 import { ingestionService } from '@/lib/ingest/service';
 import { IngestRequestSchema } from '@/lib/ingest/validation';
-import { apiResponse, apiError } from '@/lib/api-response';
-import { AuthenticationError, ValidationError } from '@/lib/errors';
+import { apiResponse, ApiError } from '@/lib/api-response';
 import { applyRateLimit } from '@/lib/rate-limit';
 import { logger } from '@/lib/logger';
 import type { SourceType, SourcePayload } from '@/lib/ingest/types';
@@ -22,14 +21,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     });
 
     if (!rateLimitResult.success) {
-      return apiError('Rate limit exceeded', 429);
+      return apiResponse(null, 'Rate limit exceeded', 429);
     }
 
-    // Authenticate user
-    const session = await getSession(req);
-    if (!session) {
-      throw new AuthenticationError('Authentication required');
-    }
+    const user = await getAuthUser(req);
 
     // Parse request body
     const body = await req.json();
@@ -38,7 +33,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // Create ingestion job
     const ingestionId = await ingestionService.createIngestionJob({
       workspaceId: validated.workspaceId,
-      userId: session.userId,
+      userId: user.id,
       sourceType: validated.sourceType as SourceType,
       payload: validated.payload as SourcePayload,
     });
@@ -46,7 +41,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     logger.info('Ingestion job created via API', {
       ingestionId,
       sourceType: validated.sourceType,
-      userId: session.userId,
+      userId: user.id,
     });
 
     return apiResponse({
@@ -55,25 +50,18 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       message: 'Ingestion job created successfully',
     });
   } catch (error) {
-    if (error instanceof AuthenticationError) {
-      return apiError(error.message, 401);
-    }
-    if (error instanceof ValidationError) {
-      return apiError(error.message, 400);
+    if (error instanceof ApiError) {
+      return apiResponse(null, error.message, error.statusCode);
     }
 
     logger.error('Ingestion API error', error);
-    return apiError('Failed to create ingestion job', 500);
+    return apiResponse(null, 'Failed to create ingestion job', 500);
   }
 }
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
   try {
-    // Authenticate user
-    const session = await getSession(req);
-    if (!session) {
-      throw new AuthenticationError('Authentication required');
-    }
+    const user = await getAuthUser(req);
 
     // Get query parameters
     const { searchParams } = new URL(req.url);
@@ -82,7 +70,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     const offset = parseInt(searchParams.get('offset') || '0');
 
     if (!workspaceId) {
-      throw new ValidationError('workspaceId is required');
+      throw new ApiError(400, 'workspaceId is required');
     }
 
     // List content sources
@@ -94,14 +82,11 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
     return apiResponse(result);
   } catch (error) {
-    if (error instanceof AuthenticationError) {
-      return apiError(error.message, 401);
-    }
-    if (error instanceof ValidationError) {
-      return apiError(error.message, 400);
+    if (error instanceof ApiError) {
+      return apiResponse(null, error.message, error.statusCode);
     }
 
     logger.error('List content sources API error', error);
-    return apiError('Failed to list content sources', 500);
+    return apiResponse(null, 'Failed to list content sources', 500);
   }
 }

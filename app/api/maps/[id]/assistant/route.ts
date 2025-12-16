@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { db as prisma } from '@/lib/db';
-import { requireAuth } from '@/lib/middleware';
+import { getAuthUser } from '@/lib/middleware';
 import { apiResponse, ApiError } from '@/lib/api-response';
 import { AssistantService } from '@/lib/ai/assistant-service';
 import { z } from 'zod';
@@ -17,7 +17,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await requireAuth(req);
+    const user = await getAuthUser(req);
     const { id: mindMapId } = await params;
 
     // Verify user has access to this mind map
@@ -35,7 +35,7 @@ export async function POST(
     });
 
     if (!mindMap) {
-      throw new ApiError('Mind map not found', 404);
+      throw new ApiError(404, 'Mind map not found');
     }
 
     const body = await req.json();
@@ -54,8 +54,8 @@ export async function POST(
 
     if (!userKey) {
       throw new ApiError(
-        `Please configure your ${provider} API key in settings`,
-        400
+        400,
+        `Please configure your ${provider} API key in settings`
       );
     }
 

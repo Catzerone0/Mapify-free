@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { ApiError, isApiError } from "./errors";
 
+// Re-export ApiError for convenience
+export { ApiError };
+
 export interface ApiResponseSuccess<T> {
   success: true;
   data: T;
@@ -78,4 +81,36 @@ export function apiFail(error: ApiError | Error | string, statusCode?: number) {
   const response = errorResponse(error);
   const code = statusCode || response.error.statusCode;
   return NextResponse.json(response, { status: code });
+}
+
+// Unified API response function
+export function apiResponse<T>(
+  data: T | null,
+  message?: string,
+  statusCode: number = 200
+) {
+  if (data === null && message) {
+    // Error case
+    return NextResponse.json(
+      {
+        success: false,
+        error: {
+          code: 'ERROR',
+          message,
+          statusCode,
+        },
+      },
+      { status: statusCode }
+    );
+  }
+  
+  // Success case
+  return NextResponse.json(
+    {
+      success: true,
+      data,
+      message,
+    },
+    { status: statusCode }
+  );
 }

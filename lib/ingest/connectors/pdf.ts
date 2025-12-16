@@ -1,6 +1,7 @@
 /**
  * PDF connector - extracts text from PDF files
  */
+// @ts-expect-error - pdf-parse doesn't have proper types
 import pdfParse from 'pdf-parse';
 import { BaseConnector } from './base';
 import type { ExtractedContent, PDFPayload, Citation } from '../types';

@@ -91,3 +91,40 @@ export function requireWorkspaceOwner(
     return handler(request, context, session);
   };
 }
+
+// Helper function to get authenticated user - for use in API routes
+export async function getAuthUser(req: NextRequest): Promise<{ id: string; email: string }> {
+  const authHeader = req.headers.get("authorization");
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    throw new AuthenticationError("Authentication required");
+  }
+
+  const token = authHeader.slice(7);
+
+  try {
+    const session = await db.session.findUnique({
+      where: { token },
+      include: {
+        user: true,
+      },
+    });
+
+    if (!session || session.expiresAt < new Date()) {
+      throw new AuthenticationError("Invalid or expired token");
+    }
+
+    return {
+      id: session.userId,
+      email: session.user.email,
+    };
+  } catch (error) {
+    if (error instanceof AuthenticationError) {
+      throw error;
+    }
+    logger.error("Failed to authenticate request", error);
+    throw new AuthenticationError("Authentication failed");
+  }
+}
+
+// Alias for backward compatibility
+export { getAuthUser as requireAuth };

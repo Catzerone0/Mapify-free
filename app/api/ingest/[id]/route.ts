@@ -4,11 +4,10 @@
  * DELETE /api/ingest/[id] - Delete content source
  */
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
-import { prisma } from '@/lib/db';
+import { db as prisma } from '@/lib/db';
+import { getAuthUser } from '@/lib/middleware';
 import { ingestionService } from '@/lib/ingest/service';
-import { apiResponse, apiError } from '@/lib/api-response';
-import { AuthenticationError, NotFoundError } from '@/lib/errors';
+import { apiResponse, ApiError } from '@/lib/api-response';
 import { logger } from '@/lib/logger';
 
 export async function GET(
@@ -16,12 +15,7 @@ export async function GET(
   context: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
   try {
-    // Authenticate user
-    const session = await getSession(req);
-    if (!session) {
-      throw new AuthenticationError('Authentication required');
-    }
-
+    const user = await getAuthUser(req);
     const { id } = await context.params;
 
     // Get content source
@@ -33,21 +27,21 @@ export async function GET(
     });
 
     if (!contentSource) {
-      throw new NotFoundError('Content source not found');
+      throw new ApiError(404, 'Content source not found');
     }
 
     // Verify access (user must be member of workspace)
     const member = await prisma.workspaceMember.findUnique({
       where: {
         userId_workspaceId: {
-          userId: session.userId,
+          userId: user.id,
           workspaceId: contentSource.workspaceId,
         },
       },
     });
 
     if (!member) {
-      throw new AuthenticationError('Access denied');
+      throw new ApiError(403, 'Access denied');
     }
 
     return apiResponse({
@@ -61,15 +55,12 @@ export async function GET(
       updatedAt: contentSource.updatedAt,
     });
   } catch (error) {
-    if (error instanceof AuthenticationError) {
-      return apiError(error.message, 401);
-    }
-    if (error instanceof NotFoundError) {
-      return apiError(error.message, 404);
+    if (error instanceof ApiError) {
+      return apiResponse(null, error.message, error.statusCode);
     }
 
     logger.error('Get content source API error', error);
-    return apiError('Failed to get content source', 500);
+    return apiResponse(null, 'Failed to get content source', 500);
   }
 }
 
@@ -78,12 +69,7 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
   try {
-    // Authenticate user
-    const session = await getSession(req);
-    if (!session) {
-      throw new AuthenticationError('Authentication required');
-    }
-
+    const user = await getAuthUser(req);
     const { id } = await context.params;
 
     // Get content source
@@ -92,21 +78,21 @@ export async function DELETE(
     });
 
     if (!contentSource) {
-      throw new NotFoundError('Content source not found');
+      throw new ApiError(404, 'Content source not found');
     }
 
     // Verify access (user must be member of workspace)
     const member = await prisma.workspaceMember.findUnique({
       where: {
         userId_workspaceId: {
-          userId: session.userId,
+          userId: user.id,
           workspaceId: contentSource.workspaceId,
         },
       },
     });
 
     if (!member) {
-      throw new AuthenticationError('Access denied');
+      throw new ApiError(403, 'Access denied');
     }
 
     // Delete content source
@@ -114,21 +100,18 @@ export async function DELETE(
 
     logger.info('Content source deleted via API', {
       contentSourceId: id,
-      userId: session.userId,
+      userId: user.id,
     });
 
     return apiResponse({
       message: 'Content source deleted successfully',
     });
   } catch (error) {
-    if (error instanceof AuthenticationError) {
-      return apiError(error.message, 401);
-    }
-    if (error instanceof NotFoundError) {
-      return apiError(error.message, 404);
+    if (error instanceof ApiError) {
+      return apiResponse(null, error.message, error.statusCode);
     }
 
     logger.error('Delete content source API error', error);
-    return apiError('Failed to delete content source', 500);
+    return apiResponse(null, 'Failed to delete content source', 500);
   }
 }

@@ -57,8 +57,8 @@ export function MindMapEditor({ mindMapId, onClose }: MindMapEditorProps) {
     loadMindMap,
   } = useMindMapStore();
 
-  const [rfNodes, setRfNodes, onNodesChange] = useNodesState([]);
-  const [rfEdges, setRfEdges, onEdgesChange] = useEdgesState([]);
+  const [rfNodes, setRfNodes, onNodesChange] = useNodesState<RFNode>([]);
+  const [rfEdges, setRfEdges, onEdgesChange] = useEdgesState<RFEdge>([]);
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [showSourcePanel, setShowSourcePanel] = useState(false);
