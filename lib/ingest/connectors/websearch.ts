@@ -196,6 +196,7 @@ export class WebSearchConnector extends BaseConnector {
       {
         title: `Search results for: ${validated.query}`,
         timestamp: new Date().toISOString(),
+        wordCount: text.split(/\s+/).length,
         resultCount: results.length,
         query: validated.query,
       },

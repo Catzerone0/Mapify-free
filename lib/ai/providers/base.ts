@@ -2,7 +2,7 @@
  * Base provider interface for AI providers
  */
 
-import { AIProviderResponse } from './types';
+import { AIProviderResponse } from '../types';
 
 export interface ProviderAdapter {
   name: string;

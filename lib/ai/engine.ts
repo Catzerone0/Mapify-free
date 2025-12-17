@@ -595,14 +595,20 @@ export class AIMapEngine {
   /**
    * Build a string representation of the mind map structure
    */
-  private buildStructureString(nodes: Array<{ title: string | null; content: string; children?: Array<{ title: string | null; content: string; children?: unknown[] }> }>, level: number): string {
+  private buildStructureString(nodes: unknown[], level: number): string {
     let result = '';
     const indent = '  '.repeat(level);
     
     for (const node of nodes) {
-      result += `${indent}- ${node.title || 'Untitled'}: ${node.content.substring(0, 100)}...\\n`;
-      if (node.children && node.children.length > 0) {
-        result += this.buildStructureString(node.children as unknown as Array<{ title: string | null; content: string; children?: unknown[] }>, level + 1);
+      const n = node as { title?: string | null; content?: string; children?: unknown[] };
+      if (!n || typeof n !== 'object') continue;
+      
+      const title = n.title || 'Untitled';
+      const content = n.content || '';
+      result += `${indent}- ${title}: ${content.substring(0, 100)}...\\n`;
+      
+      if (n.children && Array.isArray(n.children) && n.children.length > 0) {
+        result += this.buildStructureString(n.children, level + 1);
       }
     }
     

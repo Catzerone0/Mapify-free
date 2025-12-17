@@ -74,12 +74,14 @@ model MindMap {
   provider      String?   // Which AI provider was used
   complexity    String?   // simple, moderate, complex
   workspaceId   String
+  embeddings    Json?     // Vector embeddings for AI assistant
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
   workspace     Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   nodes         MapNode[]
   generationJobs GenerationJob[]
+  shareLinks    ShareLink[]
 
   @@index([workspaceId])
   @@index([createdAt])
@@ -101,6 +103,9 @@ model MapNode {
   level       Int       @default(0) // Depth in hierarchy
   order       Int       @default(0) // Order among siblings
   isCollapsed Boolean   @default(false)
+  embeddings  Json?     // Vector embeddings for AI assistant
+  lockedBy    String?   // User ID who has locked this node for editing
+  lockedAt    DateTime? // When the node was locked
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -113,6 +118,7 @@ model MapNode {
   @@index([mindMapId])
   @@index([parentId])
   @@index([level])
+  @@index([lockedBy])
 }
 
 model NodeCitation {
@@ -224,4 +230,55 @@ model ContentSource {
   @@index([sourceType])
   @@index([contentHash])
   @@index([createdAt])
+}
+
+model ShareLink {
+  id          String    @id @default(cuid())
+  mindMapId   String
+  token       String    @unique // Unique shareable token
+  role        String    // "owner" | "editor" | "viewer"
+  password    String?   // Optional password (hashed)
+  expiresAt   DateTime? // Optional expiry date
+  createdBy   String    // User ID who created the link
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  mindMap MindMap @relation(fields: [mindMapId], references: [id], onDelete: Cascade)
+
+  @@index([mindMapId])
+  @@index([token])
+  @@index([expiresAt])
+}
+
+model UserPresence {
+  id          String   @id @default(cuid())
+  userId      String
+  mindMapId   String
+  userName    String   // Cached user name for display
+  cursorX     Float?   // Current cursor position
+  cursorY     Float?
+  color       String   // User's presence color
+  lastSeenAt  DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, mindMapId])
+  @@index([mindMapId])
+  @@index([lastSeenAt])
+}
+
+model MapTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  category    String   // "project", "study", "timeline", "brainstorm", etc.
+  prompt      String   // Prompt template
+  language    String   @default("en") // Language code
+  complexity  String   @default("moderate")
+  isPublic    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([language])
+  @@index([isPublic])
 }

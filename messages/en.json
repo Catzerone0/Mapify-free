@@ -1,0 +1,85 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "export": "Export",
+    "share": "Share",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "error": "Error",
+    "success": "Success"
+  },
+  "mindmap": {
+    "title": "Mind Map",
+    "newMap": "New Mind Map",
+    "untitled": "Untitled Mind Map",
+    "generateMap": "Generate Mind Map",
+    "editNode": "Edit Node",
+    "deleteNode": "Delete Node",
+    "addChild": "Add Child Node",
+    "expandNode": "Expand Node",
+    "collapseNode": "Collapse Node"
+  },
+  "export": {
+    "title": "Export Mind Map",
+    "markdown": "Export as Markdown",
+    "text": "Export as Text",
+    "json": "Export as JSON",
+    "png": "Export as PNG",
+    "pdf": "Export as PDF",
+    "includeMetadata": "Include Metadata",
+    "includeCitations": "Include Citations"
+  },
+  "share": {
+    "title": "Share Mind Map",
+    "createLink": "Create Share Link",
+    "copyLink": "Copy Link",
+    "linkCreated": "Share link created!",
+    "role": "Access Role",
+    "owner": "Owner",
+    "editor": "Editor",
+    "viewer": "Viewer",
+    "password": "Password (optional)",
+    "expiresAt": "Expires At (optional)",
+    "requiresPassword": "This link requires a password",
+    "linkExpired": "This share link has expired"
+  },
+  "assistant": {
+    "title": "AI Assistant",
+    "askQuestion": "Ask a question about this mind map...",
+    "submit": "Ask",
+    "thinking": "Thinking...",
+    "answer": "Answer",
+    "sources": "Sources",
+    "confidence": "Confidence",
+    "noAnswer": "I couldn't find an answer in the mind map."
+  },
+  "templates": {
+    "title": "Template Gallery",
+    "browse": "Browse Templates",
+    "useTemplate": "Use Template",
+    "category": "Category",
+    "allCategories": "All Categories",
+    "project": "Project",
+    "study": "Study",
+    "timeline": "Timeline",
+    "brainstorm": "Brainstorming",
+    "analysis": "Analysis",
+    "marketing": "Marketing",
+    "product": "Product",
+    "research": "Research"
+  },
+  "collaboration": {
+    "title": "Collaboration",
+    "presence": "Active Users",
+    "joined": "{name} joined",
+    "left": "{name} left",
+    "editing": "{name} is editing",
+    "locked": "Locked by {name}",
+    "unlocked": "Node unlocked"
+  }
+}

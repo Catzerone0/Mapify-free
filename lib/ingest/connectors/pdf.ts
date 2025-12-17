@@ -1,7 +1,6 @@
 /**
  * PDF connector - extracts text from PDF files
  */
-import pdfParse from 'pdf-parse';
 import { BaseConnector } from './base';
 import type { ExtractedContent, PDFPayload, Citation } from '../types';
 import { PDFPayloadSchema } from '../validation';
@@ -29,7 +28,10 @@ export class PDFConnector extends BaseConnector {
       );
     }
 
-    // Parse PDF with retry
+    // Parse PDF with retry - use dynamic import for ESM compatibility
+    const pdfParseModule = await import('pdf-parse');
+    // @ts-expect-error - pdf-parse module structure varies
+    const pdfParse = pdfParseModule.default || pdfParseModule;
     const data = await this.retryWithBackoff(
       async () => await pdfParse(buffer),
       2,
@@ -50,6 +52,7 @@ export class PDFConnector extends BaseConnector {
         url: validated.fileUrl,
         timestamp: new Date().toISOString(),
         pageCount: data.numpages,
+        wordCount: normalizedText.split(/\s+/).length,
       },
       [citation]
     );

@@ -5,8 +5,9 @@
 import { z } from 'zod';
 import { MapNodeData, MindMapData, ValidationResult } from './types';
 
-// Schema validation for MapNodeData
-export const MapNodeSchema = z.object({
+// Schema validation for MapNodeData (type annotation to fix circular reference)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const MapNodeSchema: z.ZodType<any> = z.lazy(() => z.object({
   id: z.string().optional(),
   title: z.string().optional(),
   content: z.string().min(1, 'Content is required'),
@@ -32,8 +33,8 @@ export const MapNodeSchema = z.object({
       createdAt: z.date().optional(),
     })
   ),
-  children: z.array(z.lazy(() => MapNodeSchema)).optional(),
-});
+  children: z.array(MapNodeSchema).optional(),
+}));
 
 // Schema validation for MindMapData
 export const MindMapSchema = z.object({

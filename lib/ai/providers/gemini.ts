@@ -34,7 +34,7 @@ export class GeminiAdapter extends BaseProviderAdapter {
         });
         
         const responseText = response.response.text();
-        const tokensUsed = response.usageMetadata?.totalTokenCount || 0;
+        const tokensUsed = (response.response as { usageMetadata?: { totalTokenCount?: number } }).usageMetadata?.totalTokenCount || 0;
         
         return {
           content: responseText,

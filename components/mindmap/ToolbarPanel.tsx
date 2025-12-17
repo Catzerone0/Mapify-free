@@ -11,7 +11,11 @@ import {
   RefreshCw,
   Grid3X3,
   GitBranch,
-  BarChart3
+  BarChart3,
+  Share2,
+  Download,
+  Sparkles,
+  BookOpen
 } from 'lucide-react';
 import { Button } from '@/components/Button';
 
@@ -19,12 +23,20 @@ export interface ToolbarPanelProps {
   onToggleSourcePanel: () => void;
   onToggleControlPanel: () => void;
   onShowCommandPalette: () => void;
+  onToggleShareDialog?: () => void;
+  onToggleExportMenu?: () => void;
+  onToggleAssistantPanel?: () => void;
+  onToggleTemplateGallery?: () => void;
 }
 
 export function ToolbarPanel({ 
   onToggleSourcePanel, 
   onToggleControlPanel, 
-  onShowCommandPalette 
+  onShowCommandPalette,
+  onToggleShareDialog,
+  onToggleExportMenu,
+  onToggleAssistantPanel,
+  onToggleTemplateGallery
 }: ToolbarPanelProps) {
   const {
     mindMap,
@@ -147,6 +159,60 @@ export function ToolbarPanel({
           <EyeOff className="h-4 w-4" />
           Clear
         </Button>
+      </div>
+
+      {/* Collaboration & Sharing */}
+      <div className="border-t pt-3 mb-3">
+        <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Collaboration</h4>
+        <div className="grid grid-cols-2 gap-2">
+          {onToggleShareDialog && (
+            <Button
+              onClick={onToggleShareDialog}
+              size="sm"
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Share2 className="h-4 w-4" />
+              Share
+            </Button>
+          )}
+
+          {onToggleExportMenu && (
+            <Button
+              onClick={onToggleExportMenu}
+              size="sm"
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Export
+            </Button>
+          )}
+
+          {onToggleAssistantPanel && (
+            <Button
+              onClick={onToggleAssistantPanel}
+              size="sm"
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Sparkles className="h-4 w-4" />
+              Ask AI
+            </Button>
+          )}
+
+          {onToggleTemplateGallery && (
+            <Button
+              onClick={onToggleTemplateGallery}
+              size="sm"
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <BookOpen className="h-4 w-4" />
+              Templates
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* AI Actions */}

@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   ReactFlow,
   Node as RFNode,
+  Edge as RFEdge,
   Connection,
   useNodesState,
   useEdgesState,
@@ -24,10 +25,17 @@ import { NodeControlPanel } from './NodeControlPanel';
 import { ToolbarPanel } from './ToolbarPanel';
 import { SourcePreviewPanel } from './SourcePreviewPanel';
 import { CommandPalette } from './CommandPalette';
+import { ShareDialog } from '@/components/sharing/ShareDialog';
+import { ExportMenu } from '@/components/export/ExportMenu';
+import { AssistantPanel } from '@/components/assistant/AssistantPanel';
+import { TemplateGallery } from '@/components/templates/TemplateGallery';
+import { PresenceIndicators, CursorIndicator } from '@/components/collaboration/PresenceIndicators';
+import { useSocket } from '@/lib/websocket/use-socket';
+import type { UserPresenceData } from '@/lib/websocket/socket-server';
 
 export interface MindMapEditorProps {
   mindMapId?: string;
-  onClose?: () => void;
+  onClose?: () => void; // eslint-disable-line @typescript-eslint/no-unused-vars
 }
 
 // Node types for React Flow
@@ -49,13 +57,19 @@ export function MindMapEditor({ mindMapId, onClose }: MindMapEditorProps) {
     loadMindMap,
   } = useMindMapStore();
 
-  const [rfNodes, setRfNodes, onNodesChange] = useNodesState([]);
-  const [rfEdges, setRfEdges, onEdgesChange] = useEdgesState([]);
+  const [rfNodes, setRfNodes, onNodesChange] = useNodesState<RFNode>([]);
+  const [rfEdges, setRfEdges, onEdgesChange] = useEdgesState<RFEdge>([]);
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [showSourcePanel, setShowSourcePanel] = useState(false);
   const [showControlPanel, setShowControlPanel] = useState(false);
   const [selectedNodeForPanel, setSelectedNodeForPanel] = useState<string | null>(null);
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const [showAssistantPanel, setShowAssistantPanel] = useState(false);
+  const [showTemplateGallery, setShowTemplateGallery] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string>('');
+  const [remoteCursors, setRemoteCursors] = useState<Map<string, { x: number; y: number; userName: string; color: string }>>(new Map());
 
   // Load mind map on mount
   useEffect(() => {
@@ -64,16 +78,81 @@ export function MindMapEditor({ mindMapId, onClose }: MindMapEditorProps) {
     }
   }, [mindMapId, loadMindMap]);
 
-  // Convert MapNodeData to React Flow nodes
-  const convertToFlowNodes = useCallback((mapNodes: MapNodeData[]): any[] => {
-    const flowNodes: any[] = [];
+  // Initialize current user ID from token (memoized to avoid re-computation)
+  const initialUserId = React.useMemo(() => {
+    if (typeof window === 'undefined') return '';
+    const token = localStorage.getItem('token');
+    if (!token) return '';
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.userId || '';
+    } catch (e) {
+      console.error('Failed to parse token:', e);
+      return '';
+    }
+  }, []);
 
-    const traverseNodes = (nodes: MapNodeData[], parentX = 0, parentY = 0) => {
+  // Set the user ID once on mount
+  React.useEffect(() => {
+    if (initialUserId && !currentUserId) {
+      setCurrentUserId(initialUserId);
+    }
+  }, [initialUserId, currentUserId]);
+
+  // WebSocket integration for real-time collaboration
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') || '' : '';
+  const {
+    isConnected,
+    presenceList,
+    moveCursor,
+    // Future use: lockNode, unlockNode, editNode
+  } = useSocket({
+    mindMapId: mindMapId || '',
+    token,
+    onCursorMoved: (data) => {
+      setRemoteCursors((prev) => {
+        const next = new Map(prev);
+        next.set(data.userId, {
+          x: data.cursorX,
+          y: data.cursorY,
+          userName: data.userName,
+          color: presenceList.find((p) => p.userId === data.userId)?.color || '#3b82f6',
+        });
+        return next;
+      });
+    },
+    onNodeEdited: (data) => {
+      if (data.userId !== currentUserId) {
+        // Update the node from remote edit
+        updateNode(data.nodeId, data.updates);
+      }
+    },
+  });
+
+  // Track cursor movements
+  const handleMouseMove = useCallback(
+    (event: React.MouseEvent) => {
+      if (reactFlowInstance && isConnected) {
+        const position = reactFlowInstance.screenToFlowPosition({
+          x: event.clientX,
+          y: event.clientY,
+        });
+        moveCursor(position.x, position.y);
+      }
+    },
+    [reactFlowInstance, isConnected, moveCursor]
+  );
+
+  // Convert MapNodeData to React Flow nodes
+  const convertToFlowNodes = useCallback((mapNodes: MapNodeData[]): RFNode[] => {
+    const flowNodes: RFNode[] = [];
+
+    const traverseNodes = (nodes: MapNodeData[]) => {
       nodes.forEach((node) => {
         const isSelected = selectedNodes.includes(node.id || '');
         const isStreaming = streamingProgress?.nodeId === node.id;
 
-        const flowNode: any = {
+        const flowNode: RFNode = {
           id: node.id || '',
           type: 'mindmapNode',
           position: {
@@ -107,7 +186,7 @@ export function MindMapEditor({ mindMapId, onClose }: MindMapEditorProps) {
         flowNodes.push(flowNode);
 
         if (node.children && node.children.length > 0) {
-          traverseNodes(node.children, node.visual.x, node.visual.y);
+          traverseNodes(node.children);
         }
       });
     };
@@ -117,8 +196,8 @@ export function MindMapEditor({ mindMapId, onClose }: MindMapEditorProps) {
   }, [selectedNodes, streamingProgress, updateNode, addNode, deleteNode, selectNode]);
 
   // Convert to edges for connections
-  const convertToFlowEdges = useCallback((mapNodes: MapNodeData[]): any[] => {
-    const flowEdges: any[] = [];
+  const convertToFlowEdges = useCallback((mapNodes: MapNodeData[]): RFEdge[] => {
+    const flowEdges: RFEdge[] = [];
 
     const traverseNodes = (nodes: MapNodeData[]) => {
       nodes.forEach((node) => {
@@ -152,8 +231,8 @@ export function MindMapEditor({ mindMapId, onClose }: MindMapEditorProps) {
     const flowNodes = convertToFlowNodes(mindMap.rootNodes);
     const flowEdges = convertToFlowEdges(mindMap.rootNodes);
 
-    setRfNodes(flowNodes as any);
-    setRfEdges(flowEdges as any);
+    setRfNodes(flowNodes);
+    setRfEdges(flowEdges);
   }, [mindMap, convertToFlowNodes, convertToFlowEdges, setRfNodes, setRfEdges]);
 
   // Handle node clicks
@@ -276,13 +355,14 @@ export function MindMapEditor({ mindMapId, onClose }: MindMapEditorProps) {
         <ReactFlow
           nodes={rfNodes}
           edges={rfEdges}
-          onNodesChange={onNodesChange as any}
-          onEdgesChange={onEdgesChange as any}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           onNodeClick={onNodeClick}
           onPaneClick={onPaneClick}
           onDrop={onDrop}
           onDragOver={onDragOver}
+          onMouseMove={handleMouseMove}
           nodeTypes={nodeTypes}
           onInit={setReactFlowInstance}
           className={editorSettings.theme === 'dark' ? 'dark' : ''}
@@ -316,8 +396,31 @@ export function MindMapEditor({ mindMapId, onClose }: MindMapEditorProps) {
               onToggleSourcePanel={() => setShowSourcePanel(!showSourcePanel)}
               onToggleControlPanel={() => setShowControlPanel(!showControlPanel)}
               onShowCommandPalette={() => setShowCommandPalette(true)}
+              onToggleShareDialog={() => setShowShareDialog(!showShareDialog)}
+              onToggleExportMenu={() => setShowExportMenu(!showExportMenu)}
+              onToggleAssistantPanel={() => setShowAssistantPanel(!showAssistantPanel)}
+              onToggleTemplateGallery={() => setShowTemplateGallery(true)}
             />
           </Panel>
+
+          {/* Presence Indicators */}
+          {isConnected && (
+            <Panel position="top-right">
+              <PresenceIndicators presenceList={presenceList} currentUserId={currentUserId} />
+            </Panel>
+          )}
+
+          {/* Remote Cursors */}
+          {Array.from(remoteCursors.entries()).map(([userId, cursor]) => (
+            <CursorIndicator
+              key={userId}
+              userId={userId}
+              userName={cursor.userName}
+              cursorX={cursor.x}
+              cursorY={cursor.y}
+              color={cursor.color}
+            />
+          ))}
 
           {/* Streaming Progress */}
           {streamingProgress && (
@@ -387,6 +490,44 @@ export function MindMapEditor({ mindMapId, onClose }: MindMapEditorProps) {
       {showCommandPalette && (
         <CommandPalette
           onClose={() => setShowCommandPalette(false)}
+        />
+      )}
+
+      {/* Share Dialog */}
+      {showShareDialog && mindMapId && (
+        <ShareDialog
+          mindMapId={mindMapId}
+          onClose={() => setShowShareDialog(false)}
+        />
+      )}
+
+      {/* Export Menu */}
+      {showExportMenu && mindMapId && (
+        <ExportMenu
+          mindMapId={mindMapId}
+          mindMapTitle={mindMap?.title || 'Mind Map'}
+          onClose={() => setShowExportMenu(false)}
+        />
+      )}
+
+      {/* AI Assistant Panel */}
+      {showAssistantPanel && mindMapId && (
+        <AssistantPanel
+          mindMapId={mindMapId}
+          onClose={() => setShowAssistantPanel(false)}
+        />
+      )}
+
+      {/* Template Gallery */}
+      {showTemplateGallery && (
+        <TemplateGallery
+          onClose={() => setShowTemplateGallery(false)}
+          onSelectTemplate={(template, topic) => {
+            // Generate mind map from template
+            const prompt = template.prompt.replace('{{TOPIC}}', topic);
+            console.log('Generate from template:', prompt);
+            // TODO: Trigger mind map generation with this prompt
+          }}
         />
       )}
     </div>

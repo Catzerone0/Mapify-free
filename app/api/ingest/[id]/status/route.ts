@@ -3,23 +3,17 @@
  * GET /api/ingest/[id]/status - Get ingestion status
  */
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
-import { prisma } from '@/lib/db';
+import { db as prisma } from '@/lib/db';
+import { getAuthUser } from '@/lib/middleware';
 import { ingestionService } from '@/lib/ingest/service';
-import { apiResponse, apiError } from '@/lib/api-response';
-import { AuthError, NotFoundError } from '@/lib/errors';
+import { apiResponse, ApiError } from '@/lib/api-response';
 
 export async function GET(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
   try {
-    // Authenticate user
-    const session = await getSession(req);
-    if (!session) {
-      throw new AuthError('Authentication required');
-    }
-
+    const user = await getAuthUser(req);
     const { id } = await context.params;
 
     // Get content source to verify access
@@ -31,21 +25,21 @@ export async function GET(
     });
 
     if (!contentSource) {
-      throw new NotFoundError('Content source not found');
+      throw new ApiError(404, 'Content source not found');
     }
 
     // Verify access
     const member = await prisma.workspaceMember.findUnique({
       where: {
         userId_workspaceId: {
-          userId: session.userId,
+          userId: user.id,
           workspaceId: contentSource.workspaceId,
         },
       },
     });
 
     if (!member) {
-      throw new AuthError('Access denied');
+      throw new ApiError(403, 'Access denied');
     }
 
     // Get status
@@ -53,13 +47,10 @@ export async function GET(
 
     return apiResponse(status);
   } catch (error) {
-    if (error instanceof AuthError) {
-      return apiError(error.message, 401);
-    }
-    if (error instanceof NotFoundError) {
-      return apiError(error.message, 404);
+    if (error instanceof ApiError) {
+      return apiResponse(null, error.message, error.statusCode);
     }
 
-    return apiError('Failed to get ingestion status', 500);
+    return apiResponse(null, 'Failed to get ingestion status', 500);
   }
 }
