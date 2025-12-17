@@ -45,6 +45,7 @@ export class WebConnector extends BaseConnector {
         url: validated.url,
         author: article.byline || undefined,
         timestamp: new Date().toISOString(),
+        wordCount: text.split(/\s+/).length,
       },
       [citation]
     );

@@ -1,7 +1,28 @@
 import { Server as HTTPServer } from 'http';
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { db as prisma } from '@/lib/db';
-import { verifyToken } from '@/lib/auth';
+
+// Token verification helper
+async function verifyToken(token: string): Promise<{ id: string; email: string; name?: string } | null> {
+  try {
+    const session = await prisma.session.findUnique({
+      where: { token },
+      include: { user: true },
+    });
+
+    if (!session || session.expiresAt < new Date()) {
+      return null;
+    }
+
+    return {
+      id: session.userId,
+      email: session.user.email,
+      name: session.user.name || undefined,
+    };
+  } catch {
+    return null;
+  }
+}
 
 export interface UserPresenceData {
   userId: string;

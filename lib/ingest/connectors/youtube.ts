@@ -48,6 +48,7 @@ export class YouTubeConnector extends BaseConnector {
         url: validated.url,
         author: metadata.author,
         timestamp: new Date().toISOString(),
+        wordCount: normalizedText.split(/\s+/).length,
       },
       [citation]
     );

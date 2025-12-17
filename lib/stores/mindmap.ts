@@ -165,7 +165,7 @@ export const useMindMapStore = create<MindMapStore>()(
         id: newNodeId,
         title: nodeData.title || 'New Node',
         content: nodeData.content || '',
-        parentId,
+        parentId: parentId || undefined,
         level: nodeData.level || 1,
         order: nodeData.order || 0,
         visual: {
@@ -292,7 +292,7 @@ export const useMindMapStore = create<MindMapStore>()(
         const newNodes = [...updatedNodes];
         newNodes.splice(newIndex, 0, {
           ...nodeToMove!,
-          parentId: null,
+          parentId: undefined,
         });
         updatedNodes = newNodes;
       }
@@ -332,7 +332,7 @@ export const useMindMapStore = create<MindMapStore>()(
 
       const findNode = (nodes: MapNodeData[]): MapNodeData[] => {
         return nodes.flatMap((node) => {
-          if (state.selectedNodes.includes(node.id)) {
+          if (node.id && state.selectedNodes.includes(node.id)) {
             return [node];
           }
           if (node.children) {

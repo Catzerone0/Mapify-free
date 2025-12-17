@@ -29,12 +29,12 @@ export class IngestionService {
   private connectors: Map<SourceType, ContentConnector>;
 
   constructor() {
-    this.connectors = new Map([
-      ['text', new TextConnector()],
-      ['youtube', new YouTubeConnector()],
-      ['pdf', new PDFConnector()],
-      ['web', new WebConnector()],
-      ['websearch', new WebSearchConnector()],
+    this.connectors = new Map<SourceType, ContentConnector>([
+      ['text' as SourceType, new TextConnector()],
+      ['youtube' as SourceType, new YouTubeConnector()],
+      ['pdf' as SourceType, new PDFConnector()],
+      ['web' as SourceType, new WebConnector()],
+      ['websearch' as SourceType, new WebSearchConnector()],
     ]);
   }
 
@@ -60,7 +60,8 @@ export class IngestionService {
         userId,
         sourceType,
         status: IngestionStatus.PENDING,
-        rawPayload: payload as Record<string, unknown>,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        rawPayload: payload as any,
       },
     });
 
@@ -114,7 +115,7 @@ export class IngestionService {
       }
 
       const extracted = await connector.extract(
-        contentSource.rawPayload as SourcePayload
+        contentSource.rawPayload as unknown as SourcePayload
       );
 
       // Chunk the text
@@ -154,9 +155,12 @@ export class IngestionService {
         where: { id: ingestionId },
         data: {
           status: IngestionStatus.COMPLETED,
-          processedContent: processedContent as Record<string, unknown>,
-          metadata: extracted.metadata as Record<string, unknown>,
-          citations: extracted.citations as Record<string, unknown>[],
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          processedContent: processedContent as any,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          metadata: extracted.metadata as any,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          citations: extracted.citations as any,
           contentHash,
           sizeBytes,
         },
@@ -226,7 +230,7 @@ export class IngestionService {
       return null;
     }
 
-    return contentSource.processedContent as ProcessedContent;
+    return contentSource.processedContent as unknown as ProcessedContent;
   }
 
   async listContentSources(workspaceId: string, limit = 50, offset = 0) {

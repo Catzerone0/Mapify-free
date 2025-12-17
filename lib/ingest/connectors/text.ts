@@ -16,6 +16,7 @@ export class TextConnector extends BaseConnector {
       {
         title: validated.title || 'Text Input',
         timestamp: new Date().toISOString(),
+        wordCount: normalizedText.split(/\s+/).length,
       },
       []
     );

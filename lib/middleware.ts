@@ -125,6 +125,3 @@ export async function getAuthUser(req: NextRequest): Promise<{ id: string; email
     throw new AuthenticationError("Authentication failed");
   }
 }
-
-// Alias for backward compatibility
-export { getAuthUser as requireAuth };
