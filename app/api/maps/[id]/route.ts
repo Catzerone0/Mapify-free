@@ -114,7 +114,7 @@ export async function GET(
       .map(node => convertNodeToApiFormat(node));
     
     // Calculate metadata from nodes
-    const calculateMetadata = (nodes: unknown[]) => {
+    const calculateMetadata = () => {
       const totalNodes = mindMap.nodes.length;
       let maxDepth = 0;
       
@@ -148,7 +148,7 @@ export async function GET(
       provider: mindMap.provider || undefined,
       complexity: mindMap.complexity as 'simple' | 'moderate' | 'complex',
       rootNodes,
-      metadata: calculateMetadata(rootNodes),
+      metadata: calculateMetadata(),
     };
     
     return NextResponse.json({
@@ -180,7 +180,6 @@ export async function PATCH(
     const { id: mindMapId } = await params;
     
     // Apply rate limiting for updates
-    const clientIp = request.headers.get('x-forwarded-for') || 'unknown';
     // In a real implementation, you'd have a proper rate limiter for saves
     
     // Authenticate user

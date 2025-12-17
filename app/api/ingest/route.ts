@@ -61,8 +61,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
   try {
-    const user = await getAuthUser(req);
-
     // Get query parameters
     const { searchParams } = new URL(req.url);
     const workspaceId = searchParams.get('workspaceId');

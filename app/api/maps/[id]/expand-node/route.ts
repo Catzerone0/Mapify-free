@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { AIMapEngine } from '@/lib/ai/engine';
-import { ExpansionRequest, MapNodeData } from '@/lib/ai/types';
+import { ExpansionRequest } from '@/lib/ai/types';
 import { ApiError } from '@/lib/errors';
 import { rateLimiter } from '@/lib/rate-limit';
 
