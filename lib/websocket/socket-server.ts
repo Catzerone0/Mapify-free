@@ -89,7 +89,7 @@ export function initializeWebSocket(server: HTTPServer): SocketIOServer {
       socket.data.userId = user.id;
       socket.data.userName = user.name || user.email;
       next();
-    } catch (_error) {
+    } catch {
       next(new Error('Authentication failed'));
     }
   });

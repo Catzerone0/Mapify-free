@@ -31,11 +31,9 @@ import { AssistantPanel } from '@/components/assistant/AssistantPanel';
 import { TemplateGallery } from '@/components/templates/TemplateGallery';
 import { PresenceIndicators, CursorIndicator } from '@/components/collaboration/PresenceIndicators';
 import { useSocket } from '@/lib/websocket/use-socket';
-import type { UserPresenceData } from '@/lib/websocket/socket-server';
 
 export interface MindMapEditorProps {
   mindMapId?: string;
-  onClose?: () => void; // eslint-disable-line @typescript-eslint/no-unused-vars
 }
 
 // Node types for React Flow
@@ -43,7 +41,7 @@ const nodeTypes = {
   mindmapNode: MindMapNode,
 };
 
-export function MindMapEditor({ mindMapId, onClose }: MindMapEditorProps) {
+export function MindMapEditor({ mindMapId }: MindMapEditorProps) {
   const {
     mindMap,
     selectedNodes,

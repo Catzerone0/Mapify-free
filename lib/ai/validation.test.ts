@@ -151,6 +151,7 @@ describe('Mind Map Validation', () => {
   describe('Utility Functions', () => {
     const sampleNodes: MapNodeData[] = [
       {
+        id: 'root-1',
         title: 'Root 1',
         content: 'Root 1 content',
         level: 0,
@@ -159,6 +160,7 @@ describe('Mind Map Validation', () => {
         citations: [],
         children: [
           {
+            id: 'child-1',
             title: 'Child 1',
             content: 'Child 1 content',
             level: 1,
@@ -167,6 +169,7 @@ describe('Mind Map Validation', () => {
             citations: [],
           },
           {
+            id: 'child-2',
             title: 'Child 2',
             content: 'Child 2 content',
             level: 1,
@@ -177,6 +180,7 @@ describe('Mind Map Validation', () => {
         ],
       },
       {
+        id: 'root-2',
         title: 'Root 2',
         content: 'Root 2 content',
         level: 0,
@@ -187,7 +191,7 @@ describe('Mind Map Validation', () => {
     ];
 
     it('should count nodes correctly', () => {
-      expect(countNodes(sampleNodes)).toBe(5); // 2 root + 3 children
+      expect(countNodes(sampleNodes)).toBe(4); // 2 root + 2 children (Child 1, Child 2)
     });
 
     it('should calculate max depth correctly', () => {
@@ -220,11 +224,11 @@ describe('Mind Map Validation', () => {
 
     it('should flatten and rebuild tree correctly', () => {
       const flatNodes = flattenNodes(sampleNodes);
-      expect(flatNodes).toHaveLength(5);
+      expect(flatNodes).toHaveLength(4); // 2 root + 2 children (no ID, so we get 4 nodes)
       
       const rebuiltTree = buildTreeFromFlat(flatNodes);
-      expect(rebuiltTree).toHaveLength(2);
-      expect(rebuiltTree[0].children).toHaveLength(2);
+      expect(rebuiltTree).toHaveLength(2); // 2 root nodes
+      expect(rebuiltTree[0].children).toHaveLength(2); // Root 1 has 2 children
     });
   });
 });

@@ -266,14 +266,18 @@ export function buildTreeFromFlat(flatNodes: Array<MapNodeData & { parentId?: st
   const nodeMap = new Map<string, MapNodeData>();
   const rootNodes: MapNodeData[] = [];
   
-  // Create node map
+  // Create node map - only include nodes that have IDs
   flatNodes.forEach(node => {
-    nodeMap.set(node.id!, { ...node, children: [] });
+    if (node.id) {
+      nodeMap.set(node.id, { ...node, children: [] });
+    }
   });
   
   // Build parent-child relationships
   flatNodes.forEach(node => {
-    const currentNode = nodeMap.get(node.id!)!;
+    if (!node.id) return; // Skip nodes without IDs
+    
+    const currentNode = nodeMap.get(node.id)!;
     if (node.parentId) {
       const parentNode = nodeMap.get(node.parentId);
       if (parentNode) {

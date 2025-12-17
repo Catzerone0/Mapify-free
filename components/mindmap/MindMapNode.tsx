@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { Handle, Position } from '@xyflow/react';
-import { MapNodeData, Citation } from '@/lib/ai/types';
+import { MapNodeData } from '@/lib/ai/types';
 import { useMindMapStore } from '@/lib/stores/mindmap';
 import { 
   Edit3, 
@@ -11,7 +11,6 @@ import {
   ExternalLink, 
   ChevronDown, 
   ChevronRight,
-  FileText,
   Hash,
   Users
 } from 'lucide-react';

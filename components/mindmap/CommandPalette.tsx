@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { useMindMapStore } from '@/lib/stores/mindmap';
-import { Button } from '@/components/Button';
 import { 
   Command,
   X,
@@ -15,10 +14,7 @@ import {
   Settings,
   Grid3X3,
   EyeOff,
-  Zap,
-  FileText,
-  Palette,
-  Trash2
+  Palette
 } from 'lucide-react';
 
 export interface CommandPaletteProps {
