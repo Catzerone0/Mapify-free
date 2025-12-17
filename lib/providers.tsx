@@ -2,6 +2,7 @@
 
 import { ReactNode, useEffect } from "react";
 import { useAuthStore } from "./stores/auth";
+import { ThemeProvider } from "next-themes";
 
 export function Providers({ children }: { children: ReactNode }) {
   const { setLoading } = useAuthStore();
@@ -32,5 +33,14 @@ export function Providers({ children }: { children: ReactNode }) {
     initializeAuth();
   }, [setLoading]);
 
-  return <>{children}</>;
+  return (
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="system"
+      enableSystem
+      disableTransitionOnChange={false}
+    >
+      {children}
+    </ThemeProvider>
+  );
 }

@@ -14,6 +14,8 @@
   --color-foreground: rgb(17 24 39);
   --color-foreground-secondary: rgb(75 85 99);
   --color-border: rgb(229 231 235);
+  --color-muted: rgb(107 114 128);
+  --color-muted-foreground: rgb(75 85 99);
 
   --color-gray-50: rgb(249 250 251);
   --color-gray-100: rgb(243 244 246);
@@ -31,30 +33,30 @@
 }
 
 @supports (color: var(--color)) {
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --color-background: rgb(17 24 39);
-      --color-background-secondary: rgb(31 41 55);
-      --color-foreground: rgb(243 244 246);
-      --color-foreground-secondary: rgb(209 213 219);
-      --color-border: rgb(55 65 81);
+  .dark {
+    --color-background: rgb(17 24 39);
+    --color-background-secondary: rgb(31 41 55);
+    --color-foreground: rgb(243 244 246);
+    --color-foreground-secondary: rgb(209 213 219);
+    --color-border: rgb(55 65 81);
+    --color-muted: rgb(55 65 81);
+    --color-muted-foreground: rgb(156 163 175);
 
-      --color-gray-50: rgb(17 24 39);
-      --color-gray-100: rgb(31 41 55);
-      --color-gray-200: rgb(55 65 81);
-      --color-gray-300: rgb(75 85 99);
-      --color-gray-400: rgb(107 114 128);
-      --color-gray-500: rgb(156 163 175);
-      --color-gray-600: rgb(209 213 219);
-      --color-gray-700: rgb(229 231 235);
-      --color-gray-800: rgb(243 244 246);
-      --color-gray-900: rgb(249 250 251);
-    }
+    --color-gray-50: rgb(17 24 39);
+    --color-gray-100: rgb(31 41 55);
+    --color-gray-200: rgb(55 65 81);
+    --color-gray-300: rgb(75 85 99);
+    --color-gray-400: rgb(107 114 128);
+    --color-gray-500: rgb(156 163 175);
+    --color-gray-600: rgb(209 213 219);
+    --color-gray-700: rgb(229 231 235);
+    --color-gray-800: rgb(243 244 246);
+    --color-gray-900: rgb(249 250 251);
   }
 }
 
 html {
-  @apply bg-background text-foreground;
+  color-scheme: light dark;
 }
 
 body {
@@ -66,5 +68,26 @@ body {
 /* Smooth color transitions for theme switching */
 html,
 body {
-  @apply transition-colors duration-200;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* CSS custom properties for shadcn/ui compatibility */
+:root {
+  --background: var(--color-background);
+  --foreground: var(--color-foreground);
+  --muted: var(--color-background-secondary);
+  --muted-foreground: var(--color-muted-foreground);
+  --border: var(--color-border);
+  --input: var(--color-background);
+  --ring: var(--color-primary);
+}
+
+.dark {
+  --background: var(--color-background);
+  --foreground: var(--color-foreground);
+  --muted: var(--color-background-secondary);
+  --muted-foreground: var(--color-muted-foreground);
+  --border: var(--color-border);
+  --input: var(--color-background);
+  --ring: var(--color-primary);
 }
