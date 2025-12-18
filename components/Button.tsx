@@ -7,18 +7,22 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
 }
 
+const baseClasses =
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ring-offset-background disabled:pointer-events-none disabled:opacity-50";
+
 const variantClasses = {
-  primary: "bg-blue-600 text-white hover:bg-blue-700",
-  secondary: "bg-gray-200 text-gray-900 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600",
-  danger: "bg-red-600 text-white hover:bg-red-700",
-  outline: "border border-gray-300 bg-transparent text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800",
-  ghost: "bg-transparent text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800",
+  primary: "bg-primary text-primary-foreground hover:bg-primary/90",
+  secondary:
+    "bg-secondary text-secondary-foreground border border-border hover:bg-accent",
+  danger: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+  outline: "border border-border bg-background text-foreground hover:bg-accent",
+  ghost: "bg-transparent text-foreground hover:bg-accent",
 };
 
 const sizeClasses = {
-  sm: "px-3 py-1.5 text-sm",
-  md: "px-4 py-2 text-base",
-  lg: "px-6 py-3 text-lg",
+  sm: "h-8 px-3 text-sm",
+  md: "h-9 px-4 text-sm",
+  lg: "h-10 px-6 text-sm",
 };
 
 export function Button({
@@ -33,20 +37,17 @@ export function Button({
   return (
     <button
       disabled={disabled || loading}
-      className={`
-        inline-flex items-center justify-center
-        font-medium rounded-lg
-        transition-colors duration-200
-        disabled:opacity-50 disabled:cursor-not-allowed
-        ${variantClasses[variant]}
-        ${sizeClasses[size]}
-        ${className}
-      `}
+      className={[
+        baseClasses,
+        variantClasses[variant],
+        sizeClasses[size],
+        className,
+      ].join(" ")}
       {...props}
     >
       {loading && (
         <svg
-          className="animate-spin -ml-1 mr-2 h-4 w-4"
+          className="animate-spin -ml-1 h-4 w-4"
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"

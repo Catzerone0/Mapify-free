@@ -255,7 +255,7 @@ export default function WorkspacePage() {
               {workspace.mindMaps.map((mindMap) => (
                 <Card
                   key={mindMap.id}
-                  className="cursor-pointer hover:shadow-lg transition-shadow"
+                  className="cursor-pointer hover:shadow-elevation-2 transition-shadow"
                   onClick={() => router.push(`/mindmap/editor?id=${mindMap.id}`)}
                 >
                   <CardContent className="pt-4">

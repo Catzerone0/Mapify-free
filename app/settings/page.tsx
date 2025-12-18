@@ -150,7 +150,7 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent className="space-y-6">
             {error && (
-              <div className="p-3 bg-error/10 border border-error text-error rounded-lg text-sm">
+              <div className="p-3 bg-error/10 border border-error text-error rounded-md text-sm">
                 {error}
               </div>
             )}
@@ -172,7 +172,7 @@ export default function SettingsPage() {
                         setNewKey({ ...newKey, provider: e.target.value })
                       }
                       disabled={addingKey}
-                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full h-9 px-3 border border-border rounded-md bg-input text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary"
                     >
                       <option value="openai">OpenAI</option>
                       <option value="anthropic">Anthropic</option>
@@ -210,7 +210,7 @@ export default function SettingsPage() {
                   {providerKeys.map((key) => (
                     <div
                       key={key.id}
-                      className="flex items-center justify-between p-3 bg-background-secondary rounded-lg border border-border"
+                      className="flex items-center justify-between p-3 bg-background-secondary rounded-md border border-border"
                     >
                       <div>
                         <p className="font-medium text-foreground capitalize">

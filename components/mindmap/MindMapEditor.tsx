@@ -114,7 +114,7 @@ export function MindMapEditor({ mindMapId }: MindMapEditorProps) {
           x: data.cursorX,
           y: data.cursorY,
           userName: data.userName,
-          color: presenceList.find((p) => p.userId === data.userId)?.color || '#3b82f6',
+          color: presenceList.find((p) => p.userId === data.userId)?.color || '#0084FF',
         });
         return next;
       });
@@ -208,7 +208,7 @@ export function MindMapEditor({ mindMapId }: MindMapEditorProps) {
               type: 'smoothstep',
               animated: streamingProgress?.nodeId === child.id,
               style: {
-                stroke: editorSettings.theme === 'dark' ? '#374151' : '#e5e7eb',
+                stroke: editorSettings.theme === 'dark' ? '#3A3A3A' : '#E5E3DF',
                 strokeWidth: 2,
               },
             });
@@ -340,15 +340,17 @@ export function MindMapEditor({ mindMapId }: MindMapEditorProps) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading mind map...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-foreground-secondary">Loading mind map...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="h-full w-full relative">
+    <div
+      className={`h-full w-full relative ${editorSettings.theme}`}
+    >
       <ReactFlowProvider>
         <ReactFlow
           nodes={rfNodes}
@@ -374,16 +376,19 @@ export function MindMapEditor({ mindMapId }: MindMapEditorProps) {
           selectionOnDrag
           multiSelectionKeyCode={['Control', 'Meta']}
         >
-          <Background color={editorSettings.theme === 'dark' ? '#374151' : '#e5e7eb'} gap={20} />
+          <Background
+            color={editorSettings.theme === 'dark' ? '#3A3A3A' : '#E5E3DF'}
+            gap={20}
+          />
           <Controls className={editorSettings.theme === 'dark' ? 'dark-controls' : ''} />
           <MiniMap 
             className={editorSettings.theme === 'dark' ? 'dark-minimap' : ''}
             nodeColor={(node) => {
               switch (node.type) {
                 case 'mindmapNode':
-                  return '#3b82f6';
+                  return '#0084FF';
                 default:
-                  return '#6b7280';
+                  return '#9A9591';
               }
             }}
           />
@@ -423,9 +428,9 @@ export function MindMapEditor({ mindMapId }: MindMapEditorProps) {
           {/* Streaming Progress */}
           {streamingProgress && (
             <Panel position="top-center">
-              <div className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-4 py-2 rounded-lg shadow-lg">
+              <div className="bg-primary/10 text-primary border border-border px-4 py-2 rounded-md shadow-elevation-2 backdrop-blur-sm">
                 <div className="flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
                   <span className="text-sm font-medium">
                     {streamingProgress.status === 'generating' && 'Generating content...'}
                     {streamingProgress.status === 'streaming' && 'Streaming results...'}
@@ -445,13 +450,13 @@ export function MindMapEditor({ mindMapId }: MindMapEditorProps) {
                 border: none;
               }
               .react-flow__node.selected {
-                box-shadow: 0 0 0 2px #3b82f6;
+                box-shadow: 0 0 0 2px #0084ff;
               }
               .dark .react-flow__node.selected {
-                box-shadow: 0 0 0 2px #60a5fa;
+                box-shadow: 0 0 0 2px #3291ff;
               }
               .react-flow__edge {
-                stroke: ${editorSettings.theme === 'dark' ? '#374151' : '#e5e7eb'};
+                stroke: ${editorSettings.theme === 'dark' ? '#3A3A3A' : '#E5E3DF'};
               }
               .react-flow__edge.animated {
                 stroke-dasharray: 5;

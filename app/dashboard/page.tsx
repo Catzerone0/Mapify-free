@@ -134,7 +134,7 @@ export default function DashboardPage() {
             <CardContent>
               <form onSubmit={handleCreateWorkspace} className="space-y-4">
                 {error && (
-                  <div className="p-3 bg-error/10 border border-error text-error rounded-lg text-sm">
+                  <div className="p-3 bg-error/10 border border-error text-error rounded-md text-sm">
                     {error}
                   </div>
                 )}
@@ -179,7 +179,7 @@ export default function DashboardPage() {
             {workspaces.map((workspace) => (
               <Card
                 key={workspace.id}
-                className="cursor-pointer hover:shadow-lg transition-shadow"
+                className="cursor-pointer hover:shadow-elevation-2 transition-shadow"
                 onClick={() => router.push(`/workspace/${workspace.id}`)}
               >
                 <CardContent className="pt-4">

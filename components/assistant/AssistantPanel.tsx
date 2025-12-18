@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, Send, Sparkles, Book } from 'lucide-react';
+import { Book, Send, Sparkles, X } from 'lucide-react';
 
 interface AssistantPanelProps {
   mindMapId: string;
@@ -30,7 +30,6 @@ export function AssistantPanel({ mindMapId, onClose }: AssistantPanelProps) {
     const question = inputValue.trim();
     setInputValue('');
 
-    // Add user message
     setMessages((prev) => [...prev, { role: 'user', content: question }]);
     setLoading(true);
 
@@ -88,33 +87,29 @@ export function AssistantPanel({ mindMapId, onClose }: AssistantPanelProps) {
   };
 
   return (
-    <div className="fixed right-0 top-0 bottom-0 w-96 bg-white dark:bg-gray-800 shadow-2xl border-l border-gray-200 dark:border-gray-700 flex flex-col z-40">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+    <div className="fixed right-0 top-0 bottom-0 w-96 bg-popover text-popover-foreground shadow-elevation-3 border-l border-border flex flex-col z-40">
+      <div className="flex items-center justify-between p-4 border-b border-border">
         <div className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-purple-500" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            AI Assistant
-          </h3>
+          <Sparkles className="w-5 h-5 text-primary" />
+          <h3 className="text-lg font-semibold">AI Assistant</h3>
         </div>
         <button
           onClick={onClose}
-          className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+          className="text-foreground-secondary hover:text-foreground transition-colors"
+          aria-label="Close"
         >
           <X className="w-5 h-5" />
         </button>
       </div>
 
-      {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && (
-          <div className="text-center text-gray-500 dark:text-gray-400 mt-8">
-            <Sparkles className="w-12 h-12 mx-auto mb-4 text-purple-500" />
-            <p className="text-sm">
-              Ask me anything about this mind map!
-            </p>
-            <p className="text-xs mt-2">
-              I can help you find information, explain concepts, and answer questions based on the content.
+          <div className="text-center text-foreground-secondary mt-8">
+            <Sparkles className="w-12 h-12 mx-auto mb-4 text-primary" />
+            <p className="text-sm">Ask me anything about this mind map!</p>
+            <p className="text-small mt-2">
+              I can help you find information, explain concepts, and answer questions based on
+              the content.
             </p>
           </div>
         )}
@@ -125,31 +120,29 @@ export function AssistantPanel({ mindMapId, onClose }: AssistantPanelProps) {
             className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-[85%] rounded-lg p-3 ${
+              className={[
+                'max-w-[85%] rounded-md p-3',
                 message.role === 'user'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
-              }`}
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-secondary text-foreground',
+              ].join(' ')}
             >
               <p className="text-sm whitespace-pre-wrap">{message.content}</p>
 
-              {/* Sources */}
               {message.sources && message.sources.length > 0 && (
-                <div className="mt-3 pt-3 border-t border-gray-300 dark:border-gray-600">
-                  <div className="flex items-center gap-1 mb-2">
+                <div className="mt-3 pt-3 border-t border-border/60">
+                  <div className="flex items-center gap-1 mb-2 text-small text-foreground-secondary">
                     <Book className="w-3 h-3" />
-                    <span className="text-xs font-medium">Sources:</span>
+                    <span className="font-medium">Sources:</span>
                   </div>
                   <div className="space-y-2">
                     {message.sources.map((source, idx) => (
                       <div
                         key={idx}
-                        className="text-xs bg-white dark:bg-gray-800 rounded p-2"
+                        className="text-small bg-background/60 rounded-md border border-border p-2"
                       >
-                        <div className="font-medium text-blue-600 dark:text-blue-400">
-                          {source.nodeTitle}
-                        </div>
-                        <div className="text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
+                        <div className="font-medium text-primary">{source.nodeTitle}</div>
+                        <div className="text-foreground-secondary mt-1 line-clamp-2">
                           {source.nodeContent}
                         </div>
                       </div>
@@ -158,9 +151,8 @@ export function AssistantPanel({ mindMapId, onClose }: AssistantPanelProps) {
                 </div>
               )}
 
-              {/* Confidence */}
               {message.confidence !== undefined && (
-                <div className="mt-2 text-xs opacity-70">
+                <div className="mt-2 text-xs text-foreground-secondary">
                   Confidence: {Math.round(message.confidence * 100)}%
                 </div>
               )}
@@ -170,38 +162,36 @@ export function AssistantPanel({ mindMapId, onClose }: AssistantPanelProps) {
 
         {loading && (
           <div className="flex justify-start">
-            <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-3">
+            <div className="bg-secondary rounded-md p-3">
               <div className="flex items-center gap-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-500"></div>
-                <span className="text-sm text-gray-600 dark:text-gray-400">
-                  Thinking...
-                </span>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                <span className="text-sm text-foreground-secondary">Thinking...</span>
               </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* Input */}
-      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+      <div className="p-4 border-t border-border">
         <div className="flex items-end gap-2">
           <textarea
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyPress}
             placeholder="Ask a question..."
             rows={3}
-            className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            className="flex-1 px-3 py-2 border border-border rounded-md bg-background text-foreground resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary"
           />
           <button
             onClick={askQuestion}
             disabled={loading || !inputValue.trim()}
-            className="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            className="h-9 px-4 bg-primary hover:bg-primary/90 text-primary-foreground rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            aria-label="Send"
           >
             <Send className="w-5 h-5" />
           </button>
         </div>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+        <p className="text-small text-foreground-secondary mt-2">
           Press Enter to send, Shift+Enter for new line
         </p>
       </div>

@@ -1,57 +1,133 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: rgb(59 130 246);
-  --color-primary-dark: rgb(37 99 235);
-  --color-secondary: rgb(107 114 128);
-  --color-success: rgb(34 197 94);
-  --color-error: rgb(239 68 68);
-  --color-warning: rgb(245 158 11);
-  --color-info: rgb(59 130 246);
+  /* Notion-inspired palette */
+  --color-background: #ffffff;
+  --color-background-secondary: #f7f6f3;
+  --color-sidebar: #f7f6f3;
 
-  --color-background: rgb(255 255 255);
-  --color-background-secondary: rgb(249 250 251);
-  --color-foreground: rgb(17 24 39);
-  --color-foreground-secondary: rgb(75 85 99);
-  --color-border: rgb(229 231 235);
-  --color-muted: rgb(107 114 128);
-  --color-muted-foreground: rgb(75 85 99);
+  --color-foreground: #37352f;
+  --color-foreground-secondary: #9a9591;
 
-  --color-gray-50: rgb(249 250 251);
-  --color-gray-100: rgb(243 244 246);
-  --color-gray-200: rgb(229 231 235);
-  --color-gray-300: rgb(209 213 219);
-  --color-gray-400: rgb(156 163 175);
-  --color-gray-500: rgb(107 114 128);
-  --color-gray-600: rgb(75 85 99);
-  --color-gray-700: rgb(55 65 81);
-  --color-gray-800: rgb(31 41 55);
-  --color-gray-900: rgb(17 24 39);
+  --color-card: #ffffff;
+  --color-card-foreground: #37352f;
 
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-popover: #ffffff;
+  --color-popover-foreground: #37352f;
+
+  --color-secondary: #f7f6f3;
+  --color-secondary-foreground: #37352f;
+
+  --color-muted: #f7f6f3;
+  --color-muted-foreground: #9a9591;
+
+  --color-border: #e5e3df;
+  --color-input: #ffffff;
+  --color-ring: #0084ff;
+
+  --color-primary: #0084ff;
+  --color-primary-dark: #0074e0;
+  --color-primary-foreground: #ffffff;
+
+  /* Accent is used for hover surfaces in the UI */
+  --color-accent: #f0ede9;
+  --color-accent-foreground: #37352f;
+
+  --color-destructive: #dc2626;
+  --color-destructive-foreground: #ffffff;
+
+  /* Alias used across the app */
+  --color-error: #dc2626;
+  --color-error-foreground: #ffffff;
+
+  --color-success: #16a34a;
+  --color-warning: #d97706;
+  --color-info: #0084ff;
+
+  /* Typography */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+
+  /* Notion-like elevation */
+  --shadow-elevation-1: 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-elevation-2: 0 4px 8px rgba(0, 0, 0, 0.08);
+  --shadow-elevation-3: 0 8px 16px rgba(0, 0, 0, 0.12);
+
+  /* Map to Tailwind's default shadow tokens */
+  --shadow-sm: var(--shadow-elevation-1);
+  --shadow-md: var(--shadow-elevation-2);
+  --shadow-lg: var(--shadow-elevation-3);
+
+  /* Radius */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
 }
 
 @supports (color: var(--color)) {
-  .dark {
-    --color-background: rgb(17 24 39);
-    --color-background-secondary: rgb(31 41 55);
-    --color-foreground: rgb(243 244 246);
-    --color-foreground-secondary: rgb(209 213 219);
-    --color-border: rgb(55 65 81);
-    --color-muted: rgb(55 65 81);
-    --color-muted-foreground: rgb(156 163 175);
+  /* Allow nested light surfaces even when the overall app is in dark mode */
+  .light {
+    --color-background: #ffffff;
+    --color-background-secondary: #f7f6f3;
+    --color-sidebar: #f7f6f3;
 
-    --color-gray-50: rgb(17 24 39);
-    --color-gray-100: rgb(31 41 55);
-    --color-gray-200: rgb(55 65 81);
-    --color-gray-300: rgb(75 85 99);
-    --color-gray-400: rgb(107 114 128);
-    --color-gray-500: rgb(156 163 175);
-    --color-gray-600: rgb(209 213 219);
-    --color-gray-700: rgb(229 231 235);
-    --color-gray-800: rgb(243 244 246);
-    --color-gray-900: rgb(249 250 251);
+    --color-foreground: #37352f;
+    --color-foreground-secondary: #9a9591;
+
+    --color-card: #ffffff;
+    --color-card-foreground: #37352f;
+
+    --color-popover: #ffffff;
+    --color-popover-foreground: #37352f;
+
+    --color-secondary: #f7f6f3;
+    --color-secondary-foreground: #37352f;
+
+    --color-muted: #f7f6f3;
+    --color-muted-foreground: #9a9591;
+
+    --color-border: #e5e3df;
+    --color-input: #ffffff;
+    --color-ring: #0084ff;
+
+    --color-primary: #0084ff;
+    --color-primary-dark: #0074e0;
+
+    --color-accent: #f0ede9;
+    --color-accent-foreground: #37352f;
+  }
+
+  .dark {
+    --color-background: #1c1c1c;
+    --color-background-secondary: #2d2d2d;
+    --color-sidebar: #2d2d2d;
+
+    --color-foreground: #ececec;
+    --color-foreground-secondary: #888888;
+
+    --color-card: #2d2d2d;
+    --color-card-foreground: #ececec;
+
+    --color-popover: #2d2d2d;
+    --color-popover-foreground: #ececec;
+
+    --color-secondary: #2d2d2d;
+    --color-secondary-foreground: #ececec;
+
+    --color-muted: #2d2d2d;
+    --color-muted-foreground: #888888;
+
+    --color-border: #3a3a3a;
+    --color-input: #2d2d2d;
+    --color-ring: #3291ff;
+
+    --color-primary: #3291ff;
+    --color-primary-dark: #2a7fe0;
+
+    --color-accent: #373737;
+    --color-accent-foreground: #ececec;
   }
 }
 
@@ -63,55 +139,91 @@ body {
   background: var(--color-background);
   color: var(--color-foreground);
   font-family: var(--font-sans);
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
 }
 
-/* Smooth color transitions for theme switching */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+small,
+.text-small {
+  font-size: 13px;
+  line-height: 1.4;
+}
+
 html,
 body {
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: background-color 150ms ease-out, color 150ms ease-out,
+    border-color 150ms ease-out;
 }
 
-/* CSS custom properties for shadcn/ui compatibility */
+/* Shadcn-like HSL tokens (kept for compatibility) */
 :root {
   --background: var(--color-background);
   --foreground: var(--color-foreground);
-  --muted: var(--color-background-secondary);
+
+  --muted: var(--color-muted);
   --muted-foreground: var(--color-muted-foreground);
+
   --border: var(--color-border);
-  --input: var(--color-background);
-  --ring: var(--color-primary);
+  --input: var(--color-input);
+  --ring: var(--color-ring);
+
   --primary: var(--color-primary);
-  --primary-foreground: rgb(255 255 255);
-  --secondary: var(--color-background-secondary);
-  --secondary-foreground: var(--color-foreground);
-  --accent: var(--color-background-secondary);
-  --accent-foreground: var(--color-foreground);
-  --destructive: var(--color-error);
-  --destructive-foreground: rgb(255 255 255);
-  --card: var(--color-background);
-  --card-foreground: var(--color-foreground);
-  --popover: var(--color-background);
-  --popover-foreground: var(--color-foreground);
+  --primary-foreground: var(--color-primary-foreground);
+
+  --secondary: var(--color-secondary);
+  --secondary-foreground: var(--color-secondary-foreground);
+
+  --accent: var(--color-accent);
+  --accent-foreground: var(--color-accent-foreground);
+
+  --destructive: var(--color-destructive);
+  --destructive-foreground: var(--color-destructive-foreground);
+
+  --card: var(--color-card);
+  --card-foreground: var(--color-card-foreground);
+
+  --popover: var(--color-popover);
+  --popover-foreground: var(--color-popover-foreground);
 }
 
 .dark {
   --background: var(--color-background);
   --foreground: var(--color-foreground);
-  --muted: var(--color-background-secondary);
+
+  --muted: var(--color-muted);
   --muted-foreground: var(--color-muted-foreground);
+
   --border: var(--color-border);
-  --input: var(--color-background);
-  --ring: var(--color-primary);
+  --input: var(--color-input);
+  --ring: var(--color-ring);
+
   --primary: var(--color-primary);
-  --primary-foreground: rgb(255 255 255);
-  --secondary: var(--color-background-secondary);
-  --secondary-foreground: var(--color-foreground);
-  --accent: var(--color-background-secondary);
-  --accent-foreground: var(--color-foreground);
-  --destructive: var(--color-error);
-  --destructive-foreground: rgb(255 255 255);
-  --card: var(--color-background);
-  --card-foreground: var(--color-foreground);
-  --popover: var(--color-background);
-  --popover-foreground: var(--color-foreground);
+  --primary-foreground: var(--color-primary-foreground);
+
+  --secondary: var(--color-secondary);
+  --secondary-foreground: var(--color-secondary-foreground);
+
+  --accent: var(--color-accent);
+  --accent-foreground: var(--color-accent-foreground);
+
+  --destructive: var(--color-destructive);
+  --destructive-foreground: var(--color-destructive-foreground);
+
+  --card: var(--color-card);
+  --card-foreground: var(--color-card-foreground);
+
+  --popover: var(--color-popover);
+  --popover-foreground: var(--color-popover-foreground);
 }

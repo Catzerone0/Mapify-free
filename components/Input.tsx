@@ -28,25 +28,22 @@ export function Input({
       )}
       <input
         id={inputId}
-        className={`
-          w-full
-          px-3 py-2
-          border border-border rounded-lg
-          bg-background
-          text-foreground
-          placeholder:text-foreground-secondary
-          focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent
-          transition-colors duration-200
-          disabled:bg-gray-100 disabled:cursor-not-allowed
-          dark:bg-gray-800 dark:border-gray-700
-          ${error ? "border-error focus:ring-error" : ""}
-          ${className}
-        `}
+        className={[
+          "w-full h-9 px-3",
+          "border border-border rounded-md",
+          "bg-input text-foreground",
+          "placeholder:text-foreground-secondary",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary",
+          "transition-colors duration-150 ease-out",
+          "disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed",
+          error ? "border-error focus-visible:ring-error/30 focus-visible:border-error" : "",
+          className,
+        ].join(" ")}
         {...props}
       />
-      {error && <p className="text-sm text-error mt-1">{error}</p>}
+      {error && <p className="text-small text-error mt-1">{error}</p>}
       {helperText && !error && (
-        <p className="text-sm text-foreground-secondary mt-1">{helperText}</p>
+        <p className="text-small text-foreground-secondary mt-1">{helperText}</p>
       )}
     </div>
   );

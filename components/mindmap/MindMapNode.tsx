@@ -1,18 +1,18 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { MapNodeData } from '@/lib/ai/types';
 import { useMindMapStore } from '@/lib/stores/mindmap';
-import { 
-  Edit3, 
-  Plus, 
-  Trash2, 
-  ExternalLink, 
-  ChevronDown, 
+import {
+  ChevronDown,
   ChevronRight,
+  Edit3,
+  ExternalLink,
   Hash,
-  Users
+  Plus,
+  Trash2,
+  Users,
 } from 'lucide-react';
 
 export interface MindMapNodeProps {
@@ -27,51 +27,30 @@ export interface MindMapNodeProps {
   selected?: boolean;
 }
 
-const shapeStyles = {
-  rectangle: 'rounded-lg',
-  circle: 'rounded-full',
-  diamond: 'rotate-45',
-  hexagon: 'clip-hexagon',
-};
-
-const defaultColors = {
-  light: {
-    primary: '#3b82f6',
-    secondary: '#1e40af',
-    background: '#ffffff',
-    border: '#e5e7eb',
-    text: '#1f2937',
-  },
-  dark: {
-    primary: '#60a5fa',
-    secondary: '#3b82f6',
-    background: '#1f2937',
-    border: '#374151',
-    text: '#f9fafb',
-  },
-};
+const HEX_CLIP_PATH =
+  'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)';
 
 export function MindMapNode({ data, selected }: MindMapNodeProps) {
   const { editorSettings } = useMindMapStore();
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(data.title || data.content);
 
-  const colors = defaultColors[editorSettings.theme];
-  const shapeStyle = shapeStyles[data.visual.shape];
-  const hasChildren = data.children && data.children.length > 0;
+  const isSelected = Boolean(selected || data.isSelected);
+  const hasChildren = Boolean(data.children && data.children.length > 0);
 
-  // Handle double-click to edit
-  const handleDoubleClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsEditing(true);
-    setEditValue(data.title || data.content);
-  }, [data.title, data.content]);
+  const handleDoubleClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setIsEditing(true);
+      setEditValue(data.title || data.content);
+    },
+    [data.title, data.content]
+  );
 
-  // Save edit
   const handleSaveEdit = useCallback(() => {
     if (data.onEdit) {
       const updates: Partial<MapNodeData> = {
-        title: editValue.split('\n')[0], // First line as title
+        title: editValue.split('\n')[0],
         content: editValue,
       };
       data.onEdit(updates);
@@ -79,72 +58,69 @@ export function MindMapNode({ data, selected }: MindMapNodeProps) {
     setIsEditing(false);
   }, [editValue, data]);
 
-  // Cancel edit
   const handleCancelEdit = useCallback(() => {
     setEditValue(data.title || data.content);
     setIsEditing(false);
-  }, [data]);
+  }, [data.title, data.content]);
 
-  // Handle key press in edit mode
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-      e.preventDefault();
-      handleSaveEdit();
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      handleCancelEdit();
-    }
-  }, [handleSaveEdit, handleCancelEdit]);
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        handleSaveEdit();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        handleCancelEdit();
+      }
+    },
+    [handleSaveEdit, handleCancelEdit]
+  );
 
-  // Add child node
   const handleAddChild = useCallback(() => {
-    if (data.onAddChild) {
-      data.onAddChild();
-    }
+    data.onAddChild?.();
   }, [data]);
 
-  // Toggle collapse
   const handleToggleCollapse = useCallback(() => {
-    if (data.onEdit) {
-      data.onEdit({
-        visual: {
-          ...data.visual,
-          isCollapsed: !data.visual.isCollapsed,
-        },
-      });
-    }
+    data.onEdit?.({
+      visual: {
+        ...data.visual,
+        isCollapsed: !data.visual.isCollapsed,
+      },
+    });
   }, [data]);
 
-  // Handle clicks
-  const handleNodeClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (data.onSelect) {
-      data.onSelect();
-    }
-  }, [data]);
+  const handleNodeClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      data.onSelect?.();
+    },
+    [data]
+  );
 
-  // Handle delete
-  const handleDelete = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (data.onDelete) {
-      data.onDelete();
-    }
-  }, [data]);
+  const handleDelete = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      data.onDelete?.();
+    },
+    [data]
+  );
 
-  // Render citations
   const renderCitations = () => {
     if (!data.citations || data.citations.length === 0) return null;
 
     return (
       <div className="mt-2 space-y-1">
         {data.citations.slice(0, 2).map((citation, index) => (
-          <div key={citation.id || index} className="flex items-center gap-1 text-xs opacity-75">
+          <div
+            key={citation.id || index}
+            className="flex items-center gap-1 text-small text-foreground-secondary"
+          >
             <ExternalLink className="h-3 w-3" />
             <span className="truncate">{citation.title}</span>
           </div>
         ))}
         {data.citations.length > 2 && (
-          <div className="text-xs opacity-50">
+          <div className="text-small text-foreground-secondary opacity-70">
             +{data.citations.length - 2} more
           </div>
         )}
@@ -152,7 +128,6 @@ export function MindMapNode({ data, selected }: MindMapNodeProps) {
     );
   };
 
-  // Render node content
   const renderContent = () => {
     if (isEditing) {
       return (
@@ -161,28 +136,20 @@ export function MindMapNode({ data, selected }: MindMapNodeProps) {
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
             onKeyDown={handleKeyDown}
-            className={`w-full p-2 text-sm resize-none border rounded ${
-              editorSettings.theme === 'dark'
-                ? 'bg-gray-800 border-gray-600 text-gray-100'
-                : 'bg-white border-gray-300 text-gray-900'
-            }`}
+            className="w-full p-2 text-sm resize-none border border-border rounded-md bg-input text-foreground placeholder:text-foreground-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary"
             rows={3}
             autoFocus
           />
           <div className="flex gap-2">
             <button
               onClick={handleSaveEdit}
-              className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
+              className="h-8 px-3 text-sm rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
             >
               Save
             </button>
             <button
               onClick={handleCancelEdit}
-              className={`px-2 py-1 text-xs rounded ${
-                editorSettings.theme === 'dark'
-                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
+              className="h-8 px-3 text-sm rounded-md border border-border bg-secondary text-secondary-foreground hover:bg-accent transition-colors"
             >
               Cancel
             </button>
@@ -193,17 +160,16 @@ export function MindMapNode({ data, selected }: MindMapNodeProps) {
 
     return (
       <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <h3 className={`font-medium text-sm ${editorSettings.theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="font-medium text-sm text-foreground truncate">
             {data.title || 'Untitled'}
           </h3>
           <div className="flex items-center gap-1">
             {hasChildren && (
               <button
                 onClick={handleToggleCollapse}
-                className={`p-1 rounded hover:bg-opacity-20 ${
-                  editorSettings.theme === 'dark' ? 'hover:bg-gray-600' : 'hover:bg-gray-200'
-                }`}
+                className="p-1 rounded hover:bg-accent transition-colors"
+                title={data.visual.isCollapsed ? 'Expand' : 'Collapse'}
               >
                 {data.visual.isCollapsed ? (
                   <ChevronRight className="h-3 w-3" />
@@ -216,7 +182,7 @@ export function MindMapNode({ data, selected }: MindMapNodeProps) {
         </div>
 
         {data.content && !data.visual.isCollapsed && (
-          <p className={`text-xs ${editorSettings.theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+          <p className="text-small text-foreground-secondary">
             {data.content.length > 100
               ? `${data.content.substring(0, 100)}...`
               : data.content}
@@ -225,8 +191,7 @@ export function MindMapNode({ data, selected }: MindMapNodeProps) {
 
         {renderCitations()}
 
-        {/* Node metadata */}
-        <div className="flex items-center gap-2 text-xs opacity-50">
+        <div className="flex items-center gap-3 text-small text-foreground-secondary opacity-80">
           {data.level > 0 && (
             <div className="flex items-center gap-1">
               <Hash className="h-3 w-3" />
@@ -244,93 +209,93 @@ export function MindMapNode({ data, selected }: MindMapNodeProps) {
     );
   };
 
-  const baseNodeClasses = `
-    relative border-2 cursor-pointer transition-all duration-200 hover:shadow-lg
-    ${shapeStyle}
-    ${selected ? 'ring-2 ring-blue-500 ring-offset-2' : ''}
-    ${data.isStreaming ? 'animate-pulse' : ''}
-  `;
+  const shape = data.visual.shape;
+  const shapeClass =
+    shape === 'circle' ? 'rounded-full' : shape === 'rectangle' ? 'rounded-md' : '';
 
-  const dynamicStyles = {
-    backgroundColor: data.visual.color || colors.background,
-    borderColor: data.isSelected ? colors.primary : colors.border,
-    color: colors.text,
-    borderWidth: '2px',
-    minWidth: '120px',
-    minHeight: '80px',
+  const containerStyle: React.CSSProperties = {
+    minWidth: 120,
+    minHeight: 80,
+    backgroundColor: data.visual.color,
+    clipPath: shape === 'hexagon' ? HEX_CLIP_PATH : undefined,
   };
 
   return (
     <div
-      className={baseNodeClasses}
-      style={dynamicStyles}
+      className={[
+        'group relative cursor-pointer border transition-all duration-150 ease-out',
+        'bg-card',
+        'border-border shadow-elevation-1 hover:shadow-elevation-2',
+        shapeClass,
+        isSelected ? 'ring-2 ring-primary ring-offset-2 ring-offset-background border-primary' : '',
+        data.isStreaming ? 'animate-pulse' : '',
+        shape === 'diamond' ? 'rotate-45' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+      style={containerStyle}
       onClick={handleNodeClick}
       onDoubleClick={handleDoubleClick}
+      data-theme={editorSettings.theme}
     >
       {/* Connection handles */}
       {(!data.visual.isCollapsed || !hasChildren) && (
-        <Handle
-          type="target"
-          position={Position.Top}
-          className="w-2 h-2"
-        />
-      )}
-      
-      {(!data.visual.isCollapsed || !hasChildren) && (
-        <Handle
-          type="source"
-          position={Position.Bottom}
-          className="w-2 h-2"
-        />
+        <Handle type="target" position={Position.Top} className="w-2 h-2" />
       )}
 
-      {/* Node content */}
-      <div className="p-3 h-full flex flex-col">
+      {(!data.visual.isCollapsed || !hasChildren) && (
+        <Handle type="source" position={Position.Bottom} className="w-2 h-2" />
+      )}
+
+      <div
+        className={[
+          'p-3 h-full flex flex-col',
+          shape === 'diamond' ? '-rotate-45' : '',
+        ]
+          .filter(Boolean)
+          .join(' ')}
+      >
         {renderContent()}
 
         {/* Action buttons */}
-        <div className={`absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity ${
-          editorSettings.theme === 'dark' ? 'bg-gray-800' : 'bg-white'
-        } rounded p-1 shadow`}>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsEditing(true);
-            }}
-            className={`p-1 rounded hover:bg-opacity-20 ${
-              editorSettings.theme === 'dark' ? 'hover:bg-gray-600' : 'hover:bg-gray-200'
-            }`}
-            title="Edit node"
-          >
-            <Edit3 className="h-3 w-3" />
-          </button>
-          
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleAddChild();
-            }}
-            className={`p-1 rounded hover:bg-opacity-20 ${
-              editorSettings.theme === 'dark' ? 'hover:bg-gray-600' : 'hover:bg-gray-200'
-            }`}
-            title="Add child node"
-          >
-            <Plus className="h-3 w-3" />
-          </button>
-          
-          <button
-            onClick={handleDelete}
-            className="p-1 rounded hover:bg-red-500 hover:text-white"
-            title="Delete node"
-          >
-            <Trash2 className="h-3 w-3" />
-          </button>
+        <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+          <div className="flex gap-1 rounded-md border border-border bg-popover/80 backdrop-blur-sm shadow-elevation-1 p-1">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsEditing(true);
+              }}
+              className="p-1 rounded hover:bg-accent transition-colors"
+              title="Edit node"
+            >
+              <Edit3 className="h-3 w-3" />
+            </button>
+
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleAddChild();
+              }}
+              className="p-1 rounded hover:bg-accent transition-colors"
+              title="Add child node"
+            >
+              <Plus className="h-3 w-3" />
+            </button>
+
+            <button
+              onClick={handleDelete}
+              className="p-1 rounded hover:bg-destructive/10 hover:text-destructive transition-colors"
+              title="Delete node"
+            >
+              <Trash2 className="h-3 w-3" />
+            </button>
+          </div>
         </div>
 
         {/* Streaming indicator */}
         {data.isStreaming && (
           <div className="absolute top-1 left-1">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
           </div>
         )}
       </div>

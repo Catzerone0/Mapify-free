@@ -1,27 +1,27 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useMindMapStore } from '@/lib/stores/mindmap';
-import { 
-  Command,
-  X,
-  Search,
-  Plus,
-  Save,
-  RefreshCw,
-  GitBranch,
+import {
   BarChart3,
-  Settings,
-  Grid3X3,
+  Command,
   EyeOff,
-  Palette
+  Grid3X3,
+  Palette,
+  Plus,
+  RefreshCw,
+  Save,
+  Search,
+  Settings,
+  X,
+  GitBranch,
 } from 'lucide-react';
 
 export interface CommandPaletteProps {
   onClose: () => void;
 }
 
-interface Command {
+interface CommandItem {
   id: string;
   title: string;
   description: string;
@@ -50,8 +50,7 @@ export function CommandPalette({ onClose }: CommandPaletteProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('all');
 
-  const commands: Command[] = [
-    // Actions
+  const commands: CommandItem[] = [
     {
       id: 'add-root-node',
       title: 'Add Root Node',
@@ -87,8 +86,7 @@ export function CommandPalette({ onClose }: CommandPaletteProps) {
         onClose();
       },
     },
-    
-    // AI Actions
+
     {
       id: 'expand-node',
       title: 'Expand Selected Node',
@@ -132,7 +130,6 @@ export function CommandPalette({ onClose }: CommandPaletteProps) {
       },
     },
 
-    // Layout
     {
       id: 'auto-layout',
       title: 'Auto Layout',
@@ -151,9 +148,7 @@ export function CommandPalette({ onClose }: CommandPaletteProps) {
       icon: Grid3X3,
       category: 'layout',
       action: () => {
-        updateSettings({
-          layout: { ...editorSettings.layout, type: 'hierarchical' }
-        });
+        updateSettings({ layout: { ...editorSettings.layout, type: 'hierarchical' } });
         onClose();
       },
     },
@@ -164,9 +159,7 @@ export function CommandPalette({ onClose }: CommandPaletteProps) {
       icon: Grid3X3,
       category: 'layout',
       action: () => {
-        updateSettings({
-          layout: { ...editorSettings.layout, type: 'radial' }
-        });
+        updateSettings({ layout: { ...editorSettings.layout, type: 'radial' } });
         onClose();
       },
     },
@@ -177,14 +170,11 @@ export function CommandPalette({ onClose }: CommandPaletteProps) {
       icon: Grid3X3,
       category: 'layout',
       action: () => {
-        updateSettings({
-          layout: { ...editorSettings.layout, type: 'force' }
-        });
+        updateSettings({ layout: { ...editorSettings.layout, type: 'force' } });
         onClose();
       },
     },
 
-    // View
     {
       id: 'toggle-theme',
       title: 'Toggle Theme',
@@ -192,14 +182,11 @@ export function CommandPalette({ onClose }: CommandPaletteProps) {
       icon: Palette,
       category: 'view',
       action: () => {
-        updateSettings({ 
-          theme: editorSettings.theme === 'dark' ? 'light' : 'dark' 
-        });
+        updateSettings({ theme: editorSettings.theme === 'dark' ? 'light' : 'dark' });
         onClose();
       },
     },
 
-    // Settings
     {
       id: 'simple-complexity',
       title: 'Set Simple Complexity',
@@ -244,11 +231,17 @@ export function CommandPalette({ onClose }: CommandPaletteProps) {
     { id: 'settings', label: 'Settings' },
   ];
 
-  const filteredCommands = commands.filter(command => {
-    const matchesSearch = command.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         command.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = activeCategory === 'all' || command.category === activeCategory;
-    return matchesSearch && matchesCategory && !command.disabled;
+  const filteredCommands = commands.filter((command) => {
+    if (command.disabled) return false;
+
+    const matchesSearch =
+      command.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      command.description.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesCategory =
+      activeCategory === 'all' || command.category === activeCategory;
+
+    return matchesSearch && matchesCategory;
   });
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -271,89 +264,69 @@ export function CommandPalette({ onClose }: CommandPaletteProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-16">
-      {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-black bg-opacity-50"
+      <div
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
         onClick={onClose}
       />
-      
-      {/* Palette */}
-      <div className={`relative w-full max-w-lg mx-4 rounded-lg shadow-2xl border ${
-        editorSettings.theme === 'dark'
-          ? 'bg-gray-800 border-gray-700'
-          : 'bg-white border-gray-200'
-      }`}>
-        {/* Header */}
-        <div className="flex items-center gap-3 p-4 border-b border-gray-200 dark:border-gray-600">
-          <Command className="h-5 w-5" />
+
+      <div className="relative w-full max-w-lg mx-4 rounded-md shadow-elevation-3 border border-border bg-popover text-popover-foreground overflow-hidden">
+        <div className="flex items-center gap-3 p-4 border-b border-border">
+          <Command className="h-5 w-5 text-foreground-secondary" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Type a command or search..."
-            className={`flex-1 bg-transparent outline-none ${
-              editorSettings.theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
-            }`}
+            className="flex-1 bg-transparent outline-none text-foreground placeholder:text-foreground-secondary"
             autoFocus
           />
           <button
             onClick={onClose}
-            className={`p-1 rounded hover:bg-opacity-20 ${
-              editorSettings.theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
-            }`}
+            className="p-1 rounded hover:bg-accent transition-colors"
+            aria-label="Close"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        {/* Categories */}
-        <div className="flex gap-1 p-2 border-b border-gray-200 dark:border-gray-600 overflow-x-auto">
-          {categories.map(category => (
+        <div className="flex gap-1 p-2 border-b border-border overflow-x-auto">
+          {categories.map((category) => (
             <button
               key={category.id}
               onClick={() => setActiveCategory(category.id)}
-              className={`px-3 py-1 rounded-full text-sm whitespace-nowrap transition-colors ${
+              className={[
+                'px-3 py-1 rounded-full text-sm whitespace-nowrap transition-colors',
                 activeCategory === category.id
-                  ? 'bg-blue-500 text-white'
-                  : editorSettings.theme === 'dark'
-                  ? 'hover:bg-gray-700 text-gray-300'
-                  : 'hover:bg-gray-100 text-gray-700'
-              }`}
+                  ? 'bg-primary text-primary-foreground'
+                  : 'hover:bg-accent text-foreground-secondary hover:text-foreground',
+              ].join(' ')}
             >
               {category.label}
             </button>
           ))}
         </div>
 
-        {/* Commands */}
         <div className="max-h-96 overflow-y-auto">
           {filteredCommands.length > 0 ? (
             <div className="p-2">
-              {filteredCommands.map(command => {
+              {filteredCommands.map((command) => {
                 const Icon = command.icon;
                 return (
                   <button
                     key={command.id}
                     onClick={command.action}
-                    disabled={command.disabled}
-                    className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${
-                      command.disabled
-                        ? 'opacity-50 cursor-not-allowed'
-                        : editorSettings.theme === 'dark'
-                        ? 'hover:bg-gray-700 text-gray-300'
-                        : 'hover:bg-gray-50 text-gray-700'
-                    }`}
+                    className="w-full flex items-center gap-3 p-3 rounded-md hover:bg-accent transition-colors text-foreground"
                   >
-                    <Icon className="h-4 w-4 flex-shrink-0" />
+                    <Icon className="h-4 w-4 flex-shrink-0 text-foreground-secondary" />
                     <div className="flex-1 text-left">
                       <div className="font-medium text-sm">{command.title}</div>
-                      <div className="text-xs opacity-75">{command.description}</div>
+                      <div className="text-small text-foreground-secondary">
+                        {command.description}
+                      </div>
                     </div>
                     {command.shortcut && (
-                      <div className={`text-xs px-2 py-1 rounded ${
-                        editorSettings.theme === 'dark' ? 'bg-gray-600' : 'bg-gray-200'
-                      }`}>
+                      <div className="text-xs px-2 py-1 rounded border border-border bg-secondary text-secondary-foreground">
                         {command.shortcut}
                       </div>
                     )}
@@ -362,15 +335,13 @@ export function CommandPalette({ onClose }: CommandPaletteProps) {
               })}
             </div>
           ) : (
-            <div className={`p-8 text-center ${
-              editorSettings.theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-            }`}>
+            <div className="p-8 text-center text-foreground-secondary">
               <Search className="h-8 w-8 mx-auto mb-2 opacity-50" />
               <p>No commands found</p>
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="text-blue-500 hover:text-blue-600 text-sm mt-1"
+                  className="text-primary hover:text-primary-dark text-sm mt-1"
                 >
                   Clear search
                 </button>
@@ -379,10 +350,7 @@ export function CommandPalette({ onClose }: CommandPaletteProps) {
           )}
         </div>
 
-        {/* Footer */}
-        <div className={`p-3 border-t text-xs text-center ${
-          editorSettings.theme === 'dark' ? 'border-gray-600 text-gray-400' : 'border-gray-200 text-gray-500'
-        }`}>
+        <div className="p-3 border-t border-border text-xs text-center text-foreground-secondary">
           <div className="flex items-center justify-center gap-4">
             <span>↑↓ Navigate</span>
             <span>↵ Select</span>
