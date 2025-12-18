@@ -46,6 +46,16 @@ function parseEnvFile(contents) {
 }
 
 function resolveProjectRoot() {
+  // Use process.cwd() as primary method since npm scripts run from project root
+  // This is more reliable on Windows than using fileURLToPath with import.meta.url
+  const cwd = process.cwd();
+  
+  // Check if we're in the project root by looking for package.json
+  if (fs.existsSync(path.join(cwd, 'package.json'))) {
+    return cwd;
+  }
+  
+  // Fallback to using import.meta.url (for cases where script is run directly)
   return path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 }
 

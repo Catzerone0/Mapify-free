@@ -43,12 +43,14 @@ npm run db:generate
 You can also run the scripts directly:
 
 ```bash
-# Node.js script (cross-platform)
+# Node.js script (cross-platform, works on Windows)
 node scripts/reset-db-second-migration.mjs [--skip-seed] [--force]
 
-# Bash script (Unix/Linux/macOS)
+# Bash script (Unix/Linux/macOS only)
 ./scripts/reset-db-second-migration.sh [--skip-seed]
 ```
+
+**Windows users:** Use the Node.js script (first option) or the npm commands above. The bash script will not work on Windows without WSL or Git Bash.
 
 ## Prerequisites
 
@@ -58,6 +60,8 @@ Before running reset commands:
    ```
    DATABASE_URL="postgresql://user:password@localhost:5432/mindmap_db"
    ```
+   
+   **Note for Windows users:** Make sure the `.env` or `.env.local` file is in the root directory of the project (same location as `package.json`). The script will automatically find it.
 
 2. **Start PostgreSQL** server
 
@@ -74,9 +78,19 @@ The script will ask for confirmation before proceeding (unless `--force` is used
 If you encounter issues:
 
 1. **Check DATABASE_URL** is set correctly
+   - Verify `.env` or `.env.local` exists in the project root (same directory as `package.json`)
+   - The script will show you the project root directory and which env files it loaded
+   
 2. **Verify PostgreSQL is running**
+
 3. **Ensure you have database permissions**
-4. **Check the logs** for specific error messages
+
+4. **Windows-specific issues:**
+   - Make sure you're using Command Prompt, PowerShell, or Windows Terminal
+   - Use forward slashes or double backslashes in file paths
+   - The script automatically handles Windows path differences
+
+5. **Check the logs** for specific error messages
 
 For detailed documentation, see: [scripts/README.md](scripts/README.md)
 

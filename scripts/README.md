@@ -8,7 +8,7 @@ The `reset-db-second-migration` scripts provide a safe and automated way to rese
 
 ### Available Scripts
 
-#### 1. Node.js Script (Recommended - Cross-platform)
+#### 1. Node.js Script (Recommended - Cross-platform, works on Windows)
 
 **File:** `reset-db-second-migration.mjs`
 
@@ -23,6 +23,8 @@ npm run db:reset:skip-seed
 # Reset database with seeding (skip confirmation)
 npm run db:reset:force
 ```
+
+**Note for Windows users:** This script works natively on Windows. Use Command Prompt, PowerShell, or Windows Terminal to run these commands.
 
 **Direct usage:**
 ```bash
@@ -39,7 +41,7 @@ node scripts/reset-db-second-migration.mjs --force
 node scripts/reset-db-second-migration.mjs --help
 ```
 
-#### 2. Bash Script (Unix/Linux/macOS)
+#### 2. Bash Script (Unix/Linux/macOS only)
 
 **File:** `reset-db-second-migration.sh`
 
@@ -54,6 +56,8 @@ node scripts/reset-db-second-migration.mjs --help
 # Show help
 ./scripts/reset-db-second-migration.sh --help
 ```
+
+**Note:** This script does not work on Windows (unless using WSL or Git Bash). Windows users should use the Node.js script above.
 
 ### What the Scripts Do
 
@@ -142,15 +146,22 @@ Next steps:
 
 **Error: DATABASE_URL environment variable is not set**
 - Solution: Create a `.env.local` (recommended) or `.env` file with the `DATABASE_URL` variable, or copy from `.env.example`
+- **Windows users:** Make sure the `.env` or `.env.local` file is in the project root directory (same location as `package.json`). The script will show you the detected project root and which files it loaded.
 
 **Error: Can't reach database server**
 - Solution: Ensure PostgreSQL is running and the connection details in `DATABASE_URL` are correct
 
 **Error: Permission denied**
 - Solution: Make the bash script executable: `chmod +x scripts/reset-db-second-migration.sh`
+- Note: This only applies to the bash script on Unix/Linux/macOS. Windows users should use the Node.js script.
 
 **Error: Migration failed**
 - Solution: Check your Prisma schema for errors and ensure all migrations are valid
+
+**Windows-specific issues:**
+- The Node.js script automatically detects the correct project root on Windows
+- Use Command Prompt, PowerShell, or Windows Terminal
+- The script handles Windows path differences automatically
 
 ### Related Commands
 
