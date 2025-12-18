@@ -80,6 +80,18 @@ body {
   --border: var(--color-border);
   --input: var(--color-background);
   --ring: var(--color-primary);
+  --primary: var(--color-primary);
+  --primary-foreground: rgb(255 255 255);
+  --secondary: var(--color-background-secondary);
+  --secondary-foreground: var(--color-foreground);
+  --accent: var(--color-background-secondary);
+  --accent-foreground: var(--color-foreground);
+  --destructive: var(--color-error);
+  --destructive-foreground: rgb(255 255 255);
+  --card: var(--color-background);
+  --card-foreground: var(--color-foreground);
+  --popover: var(--color-background);
+  --popover-foreground: var(--color-foreground);
 }
 
 .dark {
@@ -90,4 +102,16 @@ body {
   --border: var(--color-border);
   --input: var(--color-background);
   --ring: var(--color-primary);
+  --primary: var(--color-primary);
+  --primary-foreground: rgb(255 255 255);
+  --secondary: var(--color-background-secondary);
+  --secondary-foreground: var(--color-foreground);
+  --accent: var(--color-background-secondary);
+  --accent-foreground: var(--color-foreground);
+  --destructive: var(--color-error);
+  --destructive-foreground: rgb(255 255 255);
+  --card: var(--color-background);
+  --card-foreground: var(--color-foreground);
+  --popover: var(--color-background);
+  --popover-foreground: var(--color-foreground);
 }
