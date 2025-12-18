@@ -110,9 +110,7 @@ export default function WorkspacePage() {
   };
 
   const handleCreateMindMap = () => {
-    // For now, redirect to editor page with workspace context
-    // This would typically open a modal or navigate to editor with new mind map
-    alert('Mind map creation would be implemented here');
+    router.push(`/mindmap/create?workspace=${workspaceId}`);
   };
 
   if (!isAuthenticated()) {
