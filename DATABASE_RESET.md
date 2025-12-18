@@ -54,7 +54,7 @@ node scripts/reset-db-second-migration.mjs [--skip-seed] [--force]
 
 Before running reset commands:
 
-1. **Set DATABASE_URL** in your `.env` file:
+1. **Set DATABASE_URL** in your `.env.local` (recommended) or `.env` file:
    ```
    DATABASE_URL="postgresql://user:password@localhost:5432/mindmap_db"
    ```

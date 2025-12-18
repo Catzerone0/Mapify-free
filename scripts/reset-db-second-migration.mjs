@@ -8,6 +8,7 @@
 
 import { execSync } from 'child_process';
 import { createInterface } from 'readline';
+import { loadProjectEnv } from './load-env.mjs';
 
 // Parse command line arguments
 const args = process.argv.slice(2);
@@ -32,10 +33,17 @@ console.log('Database Reset Script for Second Migration');
 console.log('================================================');
 console.log('');
 
+const { loadedFiles } = loadProjectEnv();
+if (loadedFiles.length > 0) {
+  console.log(`🔧 Loaded environment from: ${loadedFiles.join(', ')}`);
+  console.log('');
+}
+
 // Check if DATABASE_URL is set
 if (!process.env.DATABASE_URL) {
   console.error('❌ ERROR: DATABASE_URL environment variable is not set');
-  console.error('Please set DATABASE_URL in your .env file');
+  console.error('Tried loading from .env/.env.local files, but DATABASE_URL is still missing');
+  console.error('Set DATABASE_URL in your .env file or export it in your shell');
   process.exit(1);
 }
 
