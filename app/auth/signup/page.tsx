@@ -113,7 +113,7 @@ export default function SignupPage() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="p-3 bg-error/10 border border-error text-error rounded-lg text-sm">
+              <div className="p-3 bg-error/10 border border-error text-error rounded-md text-sm">
                 {error}
               </div>
             )}

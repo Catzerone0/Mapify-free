@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, Copy, Check, Share2 } from 'lucide-react';
+import { Check, Copy, Share2, X } from 'lucide-react';
+import { Button } from '@/components/Button';
+import { Input } from '@/components/Input';
 
 interface ShareDialogProps {
   mindMapId: string;
@@ -39,8 +41,8 @@ export function ShareDialog({ mindMapId, onClose }: ShareDialogProps) {
       if (data.success) {
         setShareLinks(data.data || []);
       }
-    } catch (error) {
-      console.error('Error fetching share links:', error);
+    } catch (err) {
+      console.error('Error fetching share links:', err);
     }
   }, [mindMapId]);
 
@@ -75,8 +77,8 @@ export function ShareDialog({ mindMapId, onClose }: ShareDialogProps) {
       } else {
         setError(data.message || 'Failed to create share link');
       }
-    } catch (error) {
-      console.error('Error creating share link:', error);
+    } catch (err) {
+      console.error('Error creating share link:', err);
       setError('Failed to create share link');
     } finally {
       setLoading(false);
@@ -94,8 +96,8 @@ export function ShareDialog({ mindMapId, onClose }: ShareDialogProps) {
       });
 
       setShareLinks(shareLinks.filter((link) => link.id !== linkId));
-    } catch (error) {
-      console.error('Error deleting share link:', error);
+    } catch (err) {
+      console.error('Error deleting share link:', err);
     }
   };
 
@@ -104,46 +106,40 @@ export function ShareDialog({ mindMapId, onClose }: ShareDialogProps) {
       await navigator.clipboard.writeText(url);
       setCopiedLink(linkId);
       setTimeout(() => setCopiedLink(null), 2000);
-    } catch (error) {
-      console.error('Error copying to clipboard:', error);
+    } catch (err) {
+      console.error('Error copying to clipboard:', err);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-popover text-popover-foreground rounded-md shadow-elevation-3 border border-border max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="flex items-center justify-between p-6 border-b border-border">
           <div className="flex items-center gap-3">
-            <Share2 className="w-6 h-6 text-blue-500" />
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Share Mind Map
-            </h2>
+            <Share2 className="w-6 h-6 text-primary" />
+            <h2 className="text-2xl font-semibold">Share Mind Map</h2>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            className="text-foreground-secondary hover:text-foreground transition-colors"
+            aria-label="Close"
           >
             <X className="w-6 h-6" />
           </button>
         </div>
 
-        {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {/* Create new link */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Create Share Link
-            </h3>
+            <h3 className="text-lg font-semibold">Create Share Link</h3>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-foreground-secondary mb-2">
                 Access Role
               </label>
               <select
                 value={role}
                 onChange={(e) => setRole(e.target.value as 'viewer' | 'editor' | 'owner')}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full h-9 px-3 border border-border rounded-md bg-input text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary"
               >
                 <option value="viewer">Viewer (read-only)</option>
                 <option value="editor">Editor (can edit)</option>
@@ -151,78 +147,59 @@ export function ShareDialog({ mindMapId, onClose }: ShareDialogProps) {
               </select>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Password (optional)
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Leave empty for no password"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              />
-            </div>
+            <Input
+              label="Password (optional)"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Leave empty for no password"
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Expires At (optional)
-              </label>
-              <input
-                type="datetime-local"
-                value={expiresAt}
-                onChange={(e) => setExpiresAt(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              />
-            </div>
+            <Input
+              label="Expires At (optional)"
+              type="datetime-local"
+              value={expiresAt}
+              onChange={(e) => setExpiresAt(e.target.value)}
+            />
 
             {error && (
-              <div className="text-red-600 dark:text-red-400 text-sm">
+              <div className="text-error text-sm bg-error/10 border border-error/30 rounded-md p-3">
                 {error}
               </div>
             )}
 
-            <button
-              onClick={createShareLink}
-              disabled={loading}
-              className="w-full px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium disabled:opacity-50"
-            >
-              {loading ? 'Creating...' : 'Create Link'}
-            </button>
+            <Button onClick={createShareLink} disabled={loading} className="w-full">
+              {loading ? 'Creating…' : 'Create Link'}
+            </Button>
           </div>
 
-          {/* Existing links */}
           {shareLinks.length > 0 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Active Share Links
-              </h3>
+              <h3 className="text-lg font-semibold">Active Share Links</h3>
 
               {shareLinks.map((link) => (
                 <div
                   key={link.id}
-                  className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg space-y-2"
+                  className="p-4 border border-border bg-secondary rounded-md space-y-2"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Role: <span className="capitalize">{link.role}</span>
+                    <span className="text-sm font-medium text-foreground-secondary">
+                      Role: <span className="capitalize text-foreground">{link.role}</span>
                     </span>
                     <button
                       onClick={() => deleteShareLink(link.id)}
-                      className="text-red-500 hover:text-red-700 text-sm"
+                      className="text-error hover:text-error/80 text-sm transition-colors"
                     >
                       Delete
                     </button>
                   </div>
 
                   {link.hasPassword && (
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                      🔒 Password protected
-                    </div>
+                    <div className="text-small text-foreground-secondary">🔒 Password protected</div>
                   )}
 
                   {link.expiresAt && (
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                    <div className="text-small text-foreground-secondary">
                       ⏰ Expires: {new Date(link.expiresAt).toLocaleString()}
                     </div>
                   )}
@@ -232,18 +209,20 @@ export function ShareDialog({ mindMapId, onClose }: ShareDialogProps) {
                       type="text"
                       value={link.url}
                       readOnly
-                      className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white"
+                      className="flex-1 h-9 px-3 text-sm border border-border rounded-md bg-input text-foreground"
                     />
-                    <button
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => copyToClipboard(link.url, link.id)}
-                      className="px-3 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded text-gray-700 dark:text-gray-300"
+                      aria-label="Copy"
                     >
                       {copiedLink === link.id ? (
-                        <Check className="w-4 h-4 text-green-500" />
+                        <Check className="w-4 h-4 text-success" />
                       ) : (
                         <Copy className="w-4 h-4" />
                       )}
-                    </button>
+                    </Button>
                   </div>
                 </div>
               ))}

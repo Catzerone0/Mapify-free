@@ -7,14 +7,10 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 export function Card({ children, className = "", ...props }: CardProps) {
   return (
     <div
-      className={`
-        bg-background
-        border border-border
-        rounded-lg
-        p-4
-        dark:bg-gray-800 dark:border-gray-700
-        ${className}
-      `}
+      className={[
+        "bg-card text-card-foreground border border-border rounded-md",
+        className,
+      ].join(" ")}
       {...props}
     >
       {children}
@@ -22,38 +18,32 @@ export function Card({ children, className = "", ...props }: CardProps) {
   );
 }
 
-export function CardHeader({
-  children,
-  className = "",
-  ...props
-}: CardProps) {
-  return (
-    <div className={`pb-3 border-b border-border ${className}`} {...props}>
-      {children}
-    </div>
-  );
-}
-
-export function CardContent({
-  children,
-  className = "",
-  ...props
-}: CardProps) {
-  return (
-    <div className={`pt-3 ${className}`} {...props}>
-      {children}
-    </div>
-  );
-}
-
-export function CardFooter({
-  children,
-  className = "",
-  ...props
-}: CardProps) {
+export function CardHeader({ children, className = "", ...props }: CardProps) {
   return (
     <div
-      className={`pt-3 border-t border-border flex justify-end gap-2 ${className}`}
+      className={["p-4 pb-3 border-b border-border", className].join(" ")}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+}
+
+export function CardContent({ children, className = "", ...props }: CardProps) {
+  return (
+    <div className={["p-4 pt-3", className].join(" ")} {...props}>
+      {children}
+    </div>
+  );
+}
+
+export function CardFooter({ children, className = "", ...props }: CardProps) {
+  return (
+    <div
+      className={[
+        "p-4 pt-3 border-t border-border flex justify-end gap-2",
+        className,
+      ].join(" ")}
       {...props}
     >
       {children}

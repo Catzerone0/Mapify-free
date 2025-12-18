@@ -59,7 +59,7 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-background-secondary flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background-secondary flex items-center justify-center p-4">
       <Card className="w-full max-w-2xl">
         <CardHeader>
           <h1 className="text-3xl font-bold text-foreground">Welcome to MindMap</h1>
@@ -95,7 +95,7 @@ export default function OnboardingPage() {
                 </p>
                 <form onSubmit={handleCreateFirstWorkspace} className="space-y-4">
                   {error && (
-                    <div className="p-3 bg-error/10 border border-error text-error rounded-lg text-sm">
+                    <div className="p-3 bg-error/10 border border-error text-error rounded-md text-sm">
                       {error}
                     </div>
                   )}
