@@ -66,20 +66,27 @@ A production-ready Next.js 16 application with authentication, database layer (P
 ## Getting Started
 
 ### Prerequisites
-- Node.js 18+ and npm
+- Node.js 20+ and npm
 - PostgreSQL 12+ (or Supabase account)
 - Git
+- nvm (Node Version Manager) - [Install nvm](https://github.com/nvm-sh/nvm)
 
 ### Installation
 
-1. **Clone and install dependencies**:
+1. **Clone and set up Node.js version**:
 ```bash
 git clone <repo-url>
 cd project
+nvm install  # Installs Node.js version from .nvmrc file
+nvm use      # Uses the Node.js version specified in .nvmrc
+```
+
+2. **Install dependencies**:
+```bash
 npm install
 ```
 
-2. **Set up environment variables**:
+3. **Set up environment variables**:
 ```bash
 cp .env.example .env.local
 ```
@@ -92,22 +99,22 @@ NEXTAUTH_SECRET="your-32-char-secret-key-here"
 ENCRYPTION_KEY="your-32-char-encryption-key"
 ```
 
-3. **Generate Prisma Client**:
+4. **Generate Prisma Client**:
 ```bash
 npm run db:generate
 ```
 
-4. **Run database migrations**:
+5. **Run database migrations**:
 ```bash
 npm run db:migrate
 ```
 
-5. **Seed demo data** (optional):
+6. **Seed demo data** (optional):
 ```bash
 npm run db:seed
 ```
 
-6. **Start development server**:
+7. **Start development server**:
 ```bash
 npm run dev
 ```
@@ -452,7 +459,7 @@ Run: `npm run db:migrate:deploy`
 5. Deploy!
 
 ### Other Platforms
-1. Ensure Node.js 18+ is available
+1. Ensure Node.js 20+ is available (or use `nvm install` and `nvm use` if nvm is available)
 2. Set all environment variables
 3. Run migrations before starting: `npm run db:migrate:deploy`
 4. Start app: `npm run start`
