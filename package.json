@@ -13,7 +13,10 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
-    "db:seed": "node prisma/seed.mjs"
+    "db:seed": "node prisma/seed.mjs",
+    "db:reset": "node scripts/reset-db-second-migration.mjs",
+    "db:reset:skip-seed": "node scripts/reset-db-second-migration.mjs --skip-seed",
+    "db:reset:force": "node scripts/reset-db-second-migration.mjs --force"
   },
   "dependencies": {
     "@google/generative-ai": "^0.11.5",
