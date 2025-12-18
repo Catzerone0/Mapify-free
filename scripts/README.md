@@ -74,7 +74,7 @@ node scripts/reset-db-second-migration.mjs --help
 
 Before running the reset scripts, ensure:
 
-1. **DATABASE_URL is set** - The `DATABASE_URL` environment variable must be configured in your `.env` file
+1. **DATABASE_URL is set** - The `DATABASE_URL` environment variable must be configured in your `.env.local` (recommended) or `.env` file
    ```
    DATABASE_URL="postgresql://user:password@localhost:5432/mindmap_db"
    ```
@@ -141,7 +141,7 @@ Next steps:
 ### Troubleshooting
 
 **Error: DATABASE_URL environment variable is not set**
-- Solution: Create a `.env` file with the `DATABASE_URL` variable, or copy from `.env.example`
+- Solution: Create a `.env.local` (recommended) or `.env` file with the `DATABASE_URL` variable, or copy from `.env.example`
 
 **Error: Can't reach database server**
 - Solution: Ensure PostgreSQL is running and the connection details in `DATABASE_URL` are correct

@@ -30,10 +30,41 @@ while [[ "$#" -gt 0 ]]; do
     shift
 done
 
+# Load environment variables from common env files if present
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+NODE_ENV_VALUE="${NODE_ENV:-}"
+
+ENV_FILES=()
+
+if [ -n "$NODE_ENV_VALUE" ]; then
+    ENV_FILES+=(".env.${NODE_ENV_VALUE}.local")
+fi
+
+if [ "$NODE_ENV_VALUE" != "test" ]; then
+    ENV_FILES+=(".env.local")
+fi
+
+if [ -n "$NODE_ENV_VALUE" ]; then
+    ENV_FILES+=(".env.${NODE_ENV_VALUE}")
+fi
+
+ENV_FILES+=(".env")
+
+set -a
+for env_file in "${ENV_FILES[@]}"; do
+    if [ -f "$PROJECT_ROOT/$env_file" ]; then
+        # shellcheck disable=SC1090
+        source "$PROJECT_ROOT/$env_file"
+    fi
+done
+set +a
+
 # Check if DATABASE_URL is set
 if [ -z "$DATABASE_URL" ]; then
     echo "❌ ERROR: DATABASE_URL environment variable is not set"
-    echo "Please set DATABASE_URL in your .env file or export it"
+    echo "Tried loading from .env/.env.local files, but DATABASE_URL is still missing"
+    echo "Set DATABASE_URL in your .env file or export it"
     exit 1
 fi
 
