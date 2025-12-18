@@ -39,6 +39,7 @@ export function Providers({ children }: { children: ReactNode }) {
       defaultTheme="system"
       enableSystem
       disableTransitionOnChange={false}
+      storageKey="mindmap-theme"
     >
       {children}
     </ThemeProvider>
