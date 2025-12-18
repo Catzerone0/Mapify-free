@@ -36,28 +36,29 @@ export async function extractSession(
     const workspaceId =
       request.nextUrl.searchParams.get("workspaceId") || "";
 
-    if (!workspaceId) {
-      return null;
-    }
-
-    const membership = await db.workspaceMember.findUnique({
-      where: {
-        userId_workspaceId: {
-          userId: session.userId,
-          workspaceId,
+    // If workspaceId is provided, validate membership
+    let userRole = "member"; // default role
+    if (workspaceId) {
+      const membership = await db.workspaceMember.findUnique({
+        where: {
+          userId_workspaceId: {
+            userId: session.userId,
+            workspaceId,
+          },
         },
-      },
-    });
+      });
 
-    if (!membership) {
-      return null;
+      if (!membership) {
+        return null;
+      }
+      userRole = membership.role;
     }
 
     return {
       userId: session.userId,
-      workspaceId,
+      workspaceId: workspaceId || "", // Empty string if no workspaceId provided
       token,
-      userRole: membership.role,
+      userRole,
     };
   } catch (error) {
     logger.error("Failed to extract session", error);
