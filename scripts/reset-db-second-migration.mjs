@@ -57,7 +57,7 @@ function executeCommand(command, description) {
     });
     console.log(`✅ ${description} completed successfully`);
     return true;
-  } catch (error) {
+  } catch {
     console.error(`❌ ${description} failed`);
     return false;
   }
@@ -122,7 +122,7 @@ async function main() {
       stdio: 'inherit',
       env: process.env
     });
-  } catch (error) {
+  } catch {
     // Migration status command may exit with non-zero even on success
   }
 
