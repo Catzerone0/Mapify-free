@@ -14,6 +14,7 @@ import { randomBytes } from "crypto";
 const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
+  rememberMe: z.boolean().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -30,7 +31,7 @@ export async function POST(request: NextRequest) {
       throw new ValidationError("Invalid login data");
     }
 
-    const { email, password } = result.data;
+    const { email, password, rememberMe } = result.data;
 
     // Find user
     const user = await db.user.findUnique({
@@ -41,15 +42,24 @@ export async function POST(request: NextRequest) {
       throw new AuthenticationError("Invalid email or password");
     }
 
+    const isVerified = (user.preferences as { emailVerified?: boolean } | null)?.emailVerified;
+    if (isVerified === false) {
+      throw new AuthenticationError(
+        "Please verify your email address before signing in. Check your inbox for a verification link."
+      );
+    }
+
     // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       throw new AuthenticationError("Invalid email or password");
     }
 
+    const maxAgeSeconds = rememberMe ? 30 * 24 * 60 * 60 : 24 * 60 * 60;
+
     // Create session token
     const token = randomBytes(32).toString("hex");
-    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+    const expiresAt = new Date(Date.now() + maxAgeSeconds * 1000);
 
     const session = await db.session.create({
       data: {
@@ -64,7 +74,7 @@ export async function POST(request: NextRequest) {
       email: user.email,
     });
 
-    return apiSuccess({
+    const res = apiSuccess({
       token: session.token,
       user: {
         id: user.id,
@@ -72,6 +82,16 @@ export async function POST(request: NextRequest) {
         name: user.name,
       },
     });
+
+    res.cookies.set("auth-token", session.token, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: maxAgeSeconds,
+    });
+
+    return res;
   } catch (error) {
     logger.error("Login error", error);
     return apiFail(error instanceof Error ? error : "Login failed");

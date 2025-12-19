@@ -14,11 +14,13 @@ export async function extractSession(
   request: NextRequest
 ): Promise<RequestContext | null> {
   const authHeader = request.headers.get("authorization");
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  const cookieToken = request.cookies.get("auth-token")?.value || null;
+
+  const token = bearerToken || cookieToken;
+  if (!token) {
     return null;
   }
-
-  const token = authHeader.slice(7);
 
   try {
     const session = await db.session.findUnique({
@@ -96,11 +98,13 @@ export function requireWorkspaceOwner(
 // Helper function to get authenticated user - for use in API routes
 export async function getAuthUser(req: NextRequest): Promise<{ id: string; email: string }> {
   const authHeader = req.headers.get("authorization");
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  const cookieToken = req.cookies.get("auth-token")?.value || null;
+
+  const token = bearerToken || cookieToken;
+  if (!token) {
     throw new AuthenticationError("Authentication required");
   }
-
-  const token = authHeader.slice(7);
 
   try {
     const session = await db.session.findUnique({

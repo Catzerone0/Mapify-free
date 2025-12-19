@@ -21,9 +21,32 @@ export function Providers({ children }: { children: ReactNode }) {
             user: JSON.parse(storedUser),
             isLoading: false,
           });
-        } else {
-          setLoading(false);
+          return;
         }
+
+        // Fallback to cookie-based session
+        const res = await fetch("/api/auth/me", {
+          method: "GET",
+          credentials: "include",
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          const payload = data?.data;
+          if (payload?.token && payload?.user) {
+            localStorage.setItem("auth_token", payload.token);
+            localStorage.setItem("auth_user", JSON.stringify(payload.user));
+
+            useAuthStore.setState({
+              token: payload.token,
+              user: payload.user,
+              isLoading: false,
+            });
+            return;
+          }
+        }
+
+        setLoading(false);
       } catch (error) {
         console.error("Failed to initialize auth", error);
         setLoading(false);
