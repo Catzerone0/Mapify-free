@@ -87,12 +87,13 @@ export async function POST(
     
     // Validate provider access
     const provider = validated.provider || 'openai';
-    const userKey = await db.userProviderKey.findUnique({
+    const userKey = await db.userProviderKey.findFirst({
       where: {
-        userId_provider: {
-          userId: session.user.id!,
-          provider,
-        },
+        userId: session.user.id!,
+        provider,
+      },
+      orderBy: {
+        isDefault: 'desc',
       },
     });
     

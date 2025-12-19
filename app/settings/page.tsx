@@ -5,35 +5,33 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/Button';
 import { Card, CardContent, CardHeader } from '@/components/Card';
 import { Input } from '@/components/Input';
+import Image from 'next/image';
 import {
   User,
-  Settings,
   Key,
   Bell,
-  Shield,
   Loader,
-  Save,
   Plus,
   Trash2,
-  Eye,
-  EyeOff,
   Briefcase,
-  Palette,
-  Monitor,
-  CheckCircle,
-  AlertCircle
 } from 'lucide-react';
 
 type Tab = 'account' | 'workspaces' | 'api' | 'notifications';
+
+interface ApiKey {
+  id: string;
+  provider: string;
+  label?: string;
+  isDefault?: boolean;
+  createdAt: string;
+}
 
 export default function SettingsPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>('account');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [user, setUser] = useState<any>(null);
-  const [apiKeys, setApiKeys] = useState<any[]>([]);
-  const [workspaces, setWorkspaces] = useState<any[]>([]);
+  const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   
   // Form states
   const [name, setName] = useState('');
@@ -47,11 +45,7 @@ export default function SettingsPage() {
   const [newKey, setNewKey] = useState({ provider: 'openai', key: '', label: '' });
   const [showKeyForm, setShowKeyForm] = useState(false);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  const fetchData = React.useCallback(async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('auth_token');
@@ -66,7 +60,6 @@ export default function SettingsPage() {
       const userRes = await fetch('/api/user/profile', { headers });
       if (userRes.ok) {
         const userData = await userRes.json();
-        setUser(userData.data);
         setName(userData.data.name || '');
         setEmail(userData.data.email || '');
         setBio(userData.data.bio || '');
@@ -82,15 +75,16 @@ export default function SettingsPage() {
         setApiKeys(keysData.data || []);
       }
       
-      // Fetch workspaces (we'd need an endpoint for all user workspaces)
-      // For now assuming we can get them or they are part of user data (workspaces array)
-      
     } catch (error) {
       console.error('Failed to fetch settings:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleSaveProfile = async () => {
     setSaving(true);
@@ -178,9 +172,15 @@ export default function SettingsPage() {
         <CardContent>
           <div className="space-y-4">
             <div className="flex items-center space-x-4 mb-4">
-              <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden border-2 border-border">
+              <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden border-2 border-border relative">
                 {avatar ? (
-                  <img src={avatar} alt="Profile" className="h-full w-full object-cover" />
+                  <Image 
+                    src={avatar} 
+                    alt="Profile" 
+                    fill
+                    className="object-cover"
+                    unoptimized
+                  />
                 ) : (
                   <User className="h-10 w-10 text-primary" />
                 )}

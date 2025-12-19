@@ -43,12 +43,13 @@ export async function POST(
 
     // Get user's API key for the provider used to generate the map
     const provider = mindMap.provider || 'openai';
-    const userKey = await prisma.userProviderKey.findUnique({
+    const userKey = await prisma.userProviderKey.findFirst({
       where: {
-        userId_provider: {
-          userId: user.id,
-          provider,
-        },
+        userId: user.id,
+        provider,
+      },
+      orderBy: {
+        isDefault: 'desc',
       },
     });
 
