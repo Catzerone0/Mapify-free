@@ -42,7 +42,7 @@ Return the mind map as a JSON object with the following structure:
 }
 
 Ensure the mind map is comprehensive, well-structured, and follows the specified complexity level.`,
-    supportedComplexity: ['simple', 'moderate', 'complex'],
+    supportedComplexity: ['simple', 'moderate', 'complex', 'detailed', 'expert'],
   },
   {
     name: 'node-regeneration',
@@ -90,7 +90,7 @@ Return the regenerated node as a JSON object:
 }
 
 Ensure the regenerated node maintains the same hierarchical level and improves upon the original content.`,
-    supportedComplexity: ['simple', 'moderate', 'complex'],
+    supportedComplexity: ['simple', 'moderate', 'complex', 'detailed', 'expert'],
   },
   {
     name: 'node-expansion',
@@ -120,7 +120,7 @@ Generate 3-7 child nodes that expand this topic meaningfully. Return as JSON:
   "content": "Updated or enhanced content (optional)",
   "children": [...]
 }`,
-    supportedComplexity: ['simple', 'moderate', 'complex'],
+    supportedComplexity: ['simple', 'moderate', 'complex', 'detailed', 'expert'],
   },
   {
     name: 'map-summarization',
@@ -144,7 +144,7 @@ Length: {summaryLength}
 Style: {summaryStyle}
 
 Provide a detailed summary that captures the essence, key insights, and important connections.`,
-    supportedComplexity: ['simple', 'moderate', 'complex'],
+    supportedComplexity: ['simple', 'moderate', 'complex', 'detailed', 'expert'],
   },
 ];
 
@@ -205,6 +205,12 @@ function getComplexityInstruction(complexity: ComplexityLevel): string {
 
     case 'complex':
       return `COMPLEXITY: Complex - Include comprehensive detail and explore connections deeply. Create 4-8 top-level branches with 4-6 sub-nodes each, including cross-connections where relevant.`;
+
+    case 'detailed':
+      return `COMPLEXITY: Detailed - Provide a very thorough breakdown. Create 6-10 top-level branches with 5-8 sub-nodes each. Focus on granularity and completeness.`;
+
+    case 'expert':
+      return `COMPLEXITY: Expert - Provide professional-grade analysis with extensive depth. Create 8-12 top-level branches with multiple sub-levels. Include sophisticated concepts, terminology, and cross-references.`;
   }
 }
 

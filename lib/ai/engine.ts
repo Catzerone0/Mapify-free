@@ -41,12 +41,13 @@ export class AIMapEngine {
     }
     
     // Get user's API key for this provider
-    const userKey = await db.userProviderKey.findUnique({
+    const userKey = await db.userProviderKey.findFirst({
       where: {
-        userId_provider: {
-          userId,
-          provider,
-        },
+        userId,
+        provider,
+      },
+      orderBy: {
+        isDefault: 'desc',
       },
     });
     
@@ -465,6 +466,13 @@ export class AIMapEngine {
         provider: data.provider,
         complexity: data.complexity,
         workspaceId: request.workspaceId,
+        layout: request.style,
+        settings: {
+          depth: request.depth,
+          includeCitations: request.includeCitations,
+          autoSummarize: request.autoSummarize,
+          language: request.language,
+        },
       },
     });
     

@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -15,6 +15,11 @@ model User {
   email     String     @unique
   name      String?
   password  String?
+  avatar    String?    // URL to avatar image
+  bio       String?
+  language  String     @default("en")
+  theme     String     @default("auto") // light, dark, auto
+  preferences Json?    // Notification settings, editor preferences, etc.
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 
@@ -22,6 +27,8 @@ model User {
   providerKeys   UserProviderKey[]
   sessions       Session[]
   contentSources ContentSource[]
+  activityLogs   ActivityLog[]
+  notifications  Notification[]
 
   @@index([email])
 }
@@ -41,6 +48,10 @@ model Session {
 model Workspace {
   id        String     @id @default(cuid())
   name      String
+  icon      String?    // Emoji or icon URL
+  color     String?    // Workspace theme color
+  visibility String    @default("private") // "private" | "public"
+  settings  Json?      // Additional workspace settings
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 
@@ -48,6 +59,7 @@ model Workspace {
   mindMaps       MindMap[]
   templates      Template[]
   contentSources ContentSource[]
+  activityLogs   ActivityLog[]
 
   @@index([createdAt])
 }
@@ -73,6 +85,9 @@ model MindMap {
   prompt        String?   // Original prompt used for generation
   provider      String?   // Which AI provider was used
   complexity    String?   // simple, moderate, complex
+  layout        String?   // hierarchical, radial, etc.
+  style         Json?     // Global style settings for this map
+  settings      Json?     // Generation/Editor settings
   workspaceId   String
   embeddings    Json?     // Vector embeddings for AI assistant
   createdAt     DateTime  @default(now())
@@ -82,6 +97,7 @@ model MindMap {
   nodes         MapNode[]
   generationJobs GenerationJob[]
   shareLinks    ShareLink[]
+  activityLogs  ActivityLog[]
 
   @@index([workspaceId])
   @@index([createdAt])
@@ -100,6 +116,7 @@ model MapNode {
   height      Float     @default(100)
   color       String?   // Hex color for node styling
   shape       String    @default("rectangle") // rectangle, circle, diamond, etc.
+  style       Json?     // Advanced styling overrides
   level       Int       @default(0) // Depth in hierarchy
   order       Int       @default(0) // Order among siblings
   isCollapsed Boolean   @default(false)
@@ -194,13 +211,16 @@ model UserProviderKey {
   id          String   @id @default(cuid())
   userId      String
   provider    String   // "openai" | "anthropic" | "google"
+  label       String?
   encryptedKey String
+  isDefault   Boolean  @default(false)
+  usage       Json?    // Track usage stats
+  lastUsedAt  DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, provider])
   @@index([userId])
 }
 
@@ -281,4 +301,36 @@ model MapTemplate {
   @@index([category])
   @@index([language])
   @@index([isPublic])
+}
+
+model ActivityLog {
+  id          String   @id @default(cuid())
+  userId      String
+  workspaceId String?
+  mindMapId   String?
+  action      String   // create, edit, delete, comment, share
+  details     Json?
+  createdAt   DateTime @default(now())
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
+  mindMap     MindMap?  @relation(fields: [mindMapId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([workspaceId])
+  @@index([createdAt])
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String   // email, in-app
+  message     String
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([read])
 }
