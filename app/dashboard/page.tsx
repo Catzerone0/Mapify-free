@@ -32,8 +32,8 @@ export default function DashboardPage() {
 
       const data = await response.json();
       setWorkspaces(data.data || []);
-    } catch (err) {
-      console.error("Failed to fetch workspaces:", err);
+    } catch {
+      setError("Failed to load workspaces. Please refresh the page.");
     }
   }, [setWorkspaces]);
 

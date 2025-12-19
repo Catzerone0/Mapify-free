@@ -449,29 +449,258 @@ Run: `npm run db:migrate:deploy`
 - Check NEXTAUTH_SECRET is at least 32 characters
 - Verify token is valid: Check browser Network tab for auth headers
 
+## Environment Variables
+
+### Required Variables
+
+| Variable | Description | Example | Notes |
+|----------|-------------|---------|-------|
+| `DATABASE_URL` | PostgreSQL connection string | `postgresql://user:pass@host:5432/db` | Use PostgreSQL for production, SQLite for tests |
+| `NEXTAUTH_SECRET` | JWT signing secret | `openssl rand -base64 32` | Must be 32+ chars, unique per environment |
+| `ENCRYPTION_KEY` | API key encryption key | `openssl rand -base64 32` | Must be 32+ chars, **backup this key!** |
+
+### Optional Variables
+
+| Variable | Description | Example | Notes |
+|----------|-------------|---------|-------|
+| `NEXTAUTH_URL` | Application URL | `http://localhost:3000` | Auto-detected in most cases |
+| `REDIS_URL` | Redis connection string | `redis://localhost:6379` | Recommended for production |
+| `TAVILY_API_KEY` | Tavily search API key | `tvly-xxxxx` | For web search ingestion |
+| `SERPAPI_API_KEY` | SerpAPI key | `xxxxx` | Alternative search provider |
+| `BING_SEARCH_API_KEY` | Bing search API key | `xxxxx` | Alternative search provider |
+| `NEXT_PUBLIC_APP_NAME` | App display name | `MindMap` | Shown in UI |
+| `ALLOWED_ORIGINS` | CORS allowed origins | `https://app.com` | Comma-separated list |
+
+### Environment Files
+
+- **`.env.local`** - Local development (not committed)
+- **`.env.test`** - Testing environment (uses SQLite)
+- **`.env.development`** - Development template
+- **`.env.staging`** - Staging template
+- **`.env.production`** - Production template
+- **`.env.example`** - Template for all environments
+
+### Generating Secrets
+
+```bash
+# Generate NEXTAUTH_SECRET
+openssl rand -base64 32
+
+# Generate ENCRYPTION_KEY
+openssl rand -base64 32
+```
+
+⚠️ **CRITICAL**: Back up your `ENCRYPTION_KEY`! Changing it invalidates all stored API keys.
+
+## Troubleshooting
+
+### Build/Startup Issues
+
+#### "Environment variable not set"
+- Ensure `.env.local` exists with all required variables
+- Check variable names match exactly (case-sensitive)
+- Restart dev server after changing env files
+
+#### "DATABASE_URL is invalid"
+- Verify PostgreSQL is running: `pg_isready`
+- Test connection: `psql $DATABASE_URL`
+- For Supabase, get connection string from Settings → Database
+
+#### "Migration failed"
+```bash
+# Reset database (⚠️ deletes all data)
+npm run db:reset
+
+# Or manually:
+npx prisma migrate reset --force
+npm run db:generate
+```
+
+### Database Issues
+
+#### "Can't reach database server"
+```bash
+# Check PostgreSQL is running
+pg_isready
+
+# Start PostgreSQL (macOS)
+brew services start postgresql
+
+# Start PostgreSQL (Linux)
+sudo systemctl start postgresql
+```
+
+#### "Migration out of sync"
+```bash
+# Check migration status
+npx prisma migrate status
+
+# Deploy migrations
+npm run db:migrate:deploy
+
+# Reset if needed (⚠️ deletes data)
+npm run db:reset
+```
+
+### Authentication Issues
+
+#### "Invalid or expired token"
+- Sessions expire after 30 days
+- Clear cookies and log in again
+- Check `NEXTAUTH_SECRET` hasn't changed
+
+#### "Cannot access protected routes"
+- Ensure `Authorization: Bearer <token>` header is set
+- Verify token is valid: check `/api/health`
+
+### API/LLM Issues
+
+#### "Failed to decrypt API key"
+- `ENCRYPTION_KEY` must match the key used to encrypt
+- If key changed, users must re-add their API keys
+- Check `.env.local` has the correct key
+
+#### "Rate limit exceeded"
+- Default limits: 10 req/min for auth, 30 req/min for API
+- Adjust in `lib/rate-limit.ts` if needed
+- Implement Redis for production rate limiting
+
+### Development Workflow Issues
+
+#### "Build fails with TypeScript errors"
+```bash
+# Check for errors
+npx tsc --noEmit
+
+# Check specific file
+npx tsc --noEmit path/to/file.ts
+```
+
+#### "Linting errors"
+```bash
+# Run linter
+npm run lint
+
+# Auto-fix issues
+npx eslint . --fix
+```
+
+#### "Tests fail"
+```bash
+# Run tests with verbose output
+npm run test -- --verbose
+
+# Run specific test file
+npm run test -- path/to/test.test.ts
+```
+
+### Production Issues
+
+#### "App crashes on startup"
+- Check all env variables are set in deployment platform
+- Verify `DATABASE_URL` is accessible from deployment
+- Check logs for specific error messages
+- Ensure migrations ran: `npm run db:migrate:deploy`
+
+#### "Database connection timeout"
+- Check PostgreSQL connection limits
+- Verify firewall allows connections from deployment IP
+- Use connection pooling (PgBouncer) for high traffic
+
+#### "Memory issues"
+- Reduce Prisma connection pool size
+- Enable Redis for caching
+- Use CDN for static assets
+- Monitor with APM tools
+
+### Common Error Messages
+
+| Error | Solution |
+|-------|----------|
+| `P2002: Unique constraint failed` | Duplicate data exists, check unique fields |
+| `P2025: Record not found` | ID doesn't exist in database |
+| `ECONNREFUSED` | Database/Redis not running |
+| `Invalid authorization header` | Missing or malformed `Bearer` token |
+| `ValidationError` | Request body doesn't match schema |
+
+### Getting Help
+
+1. Check error logs: `tail -f logs/app.log`
+2. Enable debug logging: Set `NODE_ENV=development`
+3. Test API with curl:
+```bash
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"password123"}'
+```
+
 ## Production Deployment
 
 ### Vercel (Recommended)
 1. Push code to GitHub
 2. Import repo in Vercel dashboard
-3. Add environment variables
-4. Run migrations: `npm run db:migrate:deploy`
-5. Deploy!
+3. Add all required environment variables
+4. Vercel will auto-detect Next.js and build
+5. Run migrations after first deploy:
+```bash
+# In Vercel project settings, add build command:
+npm run db:migrate:deploy && next build
+```
 
-### Other Platforms
-1. Ensure Node.js 20+ is available (or use `nvm install` and `nvm use` if nvm is available)
-2. Set all environment variables
-3. Run migrations before starting: `npm run db:migrate:deploy`
-4. Start app: `npm run start`
+### Railway
+1. Create new project from GitHub repo
+2. Add PostgreSQL database (auto-provisions)
+3. Add environment variables in Settings
+4. Railway auto-deploys on git push
+
+### DigitalOcean App Platform
+1. Create new app from GitHub
+2. Add managed PostgreSQL database
+3. Configure environment variables
+4. Set build command: `npm run db:migrate:deploy && npm run build`
+5. Set run command: `npm run start`
+
+### Docker Deployment
+```dockerfile
+# Use Node 20 Alpine
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install dependencies
+COPY package*.json ./
+RUN npm ci --only=production
+
+# Copy app files
+COPY . .
+
+# Generate Prisma client
+RUN npm run db:generate
+
+# Build app
+RUN npm run build
+
+# Expose port
+EXPOSE 3000
+
+# Start app
+CMD ["npm", "run", "start"]
+```
 
 ### Pre-deployment Checklist
-- [ ] All environment variables set
-- [ ] Database migrations applied
-- [ ] `npm run build` succeeds
+- [ ] All environment variables set in deployment platform
+- [ ] Database migrations applied (`npm run db:migrate:deploy`)
+- [ ] `npm run build` succeeds locally
 - [ ] `npm run lint` passes
-- [ ] Tests pass (setup needed)
-- [ ] NEXTAUTH_SECRET is random and secure
-- [ ] ENCRYPTION_KEY is random and secure
+- [ ] Tests pass: `npm run test`
+- [ ] `NEXTAUTH_SECRET` is unique and secure (32+ chars)
+- [ ] `ENCRYPTION_KEY` is unique, secure, and backed up
+- [ ] Database backups configured
+- [ ] Error tracking configured (Sentry, etc.)
+- [ ] Performance monitoring set up
+- [ ] SSL/TLS certificate configured
+- [ ] CORS origins configured if needed
+- [ ] Rate limiting configured for production load
 
 ## Content Ingestion Pipeline
 

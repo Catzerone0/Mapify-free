@@ -1,0 +1,36 @@
+#!/bin/sh
+
+# Pre-commit hook to prevent committing sensitive files
+
+echo "Running pre-commit checks..."
+
+# Check for .env files
+ENV_FILES=$(git diff --cached --name-only | grep -E '\.env\.local$|\.env\.production$|\.env\.staging$')
+
+if [ -n "$ENV_FILES" ]; then
+  echo "❌ ERROR: Attempting to commit sensitive environment files:"
+  echo "$ENV_FILES"
+  echo ""
+  echo "These files contain secrets and should never be committed!"
+  echo "Please unstage them with: git reset HEAD <file>"
+  exit 1
+fi
+
+# Check for common secret patterns
+SECRETS=$(git diff --cached | grep -E '(API_KEY|SECRET|PASSWORD|TOKEN).*=.*[a-zA-Z0-9]{20,}')
+
+if [ -n "$SECRETS" ]; then
+  echo "⚠️  WARNING: Possible secrets detected in staged changes:"
+  echo "$SECRETS"
+  echo ""
+  echo "Please review your changes carefully."
+  echo "If these are actual secrets, DO NOT commit them!"
+  read -p "Continue anyway? (y/N) " -n 1 -r
+  echo
+  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    exit 1
+  fi
+fi
+
+echo "✅ Pre-commit checks passed"
+exit 0

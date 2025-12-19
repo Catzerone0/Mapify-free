@@ -10,6 +10,8 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "db:setup": "node scripts/setup-db.mjs",
+    "db:setup:skip-seed": "node scripts/setup-db.mjs --skip-seed",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",

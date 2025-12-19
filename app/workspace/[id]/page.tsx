@@ -93,7 +93,6 @@ export default function WorkspacePage() {
         const data = await response.json();
         setWorkspace(data.data);
       } catch (err) {
-        console.error("Failed to fetch workspace:", err);
         setError(err instanceof Error ? err.message : "Failed to fetch workspace");
       } finally {
         setLoading(false);
@@ -150,7 +149,7 @@ export default function WorkspacePage() {
         return user.id;
       }
     } catch {
-      console.error("Failed to parse stored user");
+      // Failed to parse stored user
     }
     return null;
   };
