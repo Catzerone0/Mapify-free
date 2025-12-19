@@ -4,10 +4,24 @@ import type { NextRequest } from "next/server";
 const publicPaths = [
   "/auth/login",
   "/auth/signup",
+  "/auth/verify-email",
+  "/auth/forgot-password",
+  "/auth/reset-password",
+  "/help",
+  "/contact",
+
   "/api/auth/login",
   "/api/auth/register",
+  "/api/auth/verify-email",
+  "/api/auth/request-password-reset",
+  "/api/auth/reset-password",
+  "/api/auth/me",
+  "/api/auth/logout",
+  "/api/auth/demo",
+
   "/api/health",
   "/api/shared",
+  "/shared",
 ];
 
 const protectedPaths = [
@@ -16,10 +30,18 @@ const protectedPaths = [
   "/workspace",
   "/settings",
   "/onboarding",
+  "/maps",
+  "/templates",
+  "/shared-with-me",
+  "/activity",
 ];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  if (pathname === "/") {
+    return NextResponse.next();
+  }
 
   if (publicPaths.some((path) => pathname.startsWith(path))) {
     return NextResponse.next();

@@ -30,10 +30,10 @@ export function ShareDialog({ mindMapId, onClose }: ShareDialogProps) {
 
   const fetchShareLinks = React.useCallback(async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('auth_token');
       const response = await fetch(`/api/maps/${mindMapId}/share`, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       });
 
@@ -55,12 +55,12 @@ export function ShareDialog({ mindMapId, onClose }: ShareDialogProps) {
     setError(null);
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('auth_token');
       const response = await fetch(`/api/maps/${mindMapId}/share`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
           role,
@@ -87,11 +87,11 @@ export function ShareDialog({ mindMapId, onClose }: ShareDialogProps) {
 
   const deleteShareLink = async (linkId: string) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('auth_token');
       await fetch(`/api/maps/${mindMapId}/share?linkId=${linkId}`, {
         method: 'DELETE',
         headers: {
-          Authorization: `Bearer ${token}`,
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       });
 

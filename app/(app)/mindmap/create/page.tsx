@@ -90,11 +90,34 @@ function MindMapCreateContent() {
 
   useEffect(() => {
     if (!workspaceId) {
+      const stored = localStorage.getItem('current_workspace_id');
+      if (stored) {
+        router.replace(`/mindmap/create?workspace=${stored}`);
+        return;
+      }
       router.push('/dashboard');
       return;
     }
     fetchAvailableProviders();
   }, [workspaceId, router, fetchAvailableProviders]);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('mapify_template');
+      if (!raw) return;
+      const t = JSON.parse(raw) as { prompt?: string; complexity?: ComplexityLevel };
+      if (t.prompt) {
+        setContentType('text');
+        setPrompt(t.prompt);
+      }
+      if (t.complexity) {
+        setComplexity(t.complexity);
+      }
+      localStorage.removeItem('mapify_template');
+    } catch {
+      // ignore
+    }
+  }, []);
 
   const validateInput = (): boolean => {
     if (contentType === 'text' && !prompt.trim()) {

@@ -7,6 +7,12 @@ import {
 } from '@/lib/ai/types';
 import { v4 as uuidv4 } from 'uuid';
 
+function getAuthHeader() {
+  if (typeof window === 'undefined') return {};
+  const token = localStorage.getItem('auth_token');
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 export interface StreamProgress {
   nodeId?: string;
   status: 'pending' | 'generating' | 'streaming' | 'complete' | 'error';
@@ -421,7 +427,7 @@ export const useMindMapStore = create<MindMapStore>()(
       try {
         const response = await fetch(`/api/maps/${state.mindMap.id}/expand-node`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
           body: JSON.stringify({
             nodeId,
             prompt,
@@ -480,7 +486,7 @@ export const useMindMapStore = create<MindMapStore>()(
       try {
         const response = await fetch(`/api/maps/${state.mindMap.id}/regenerate-node`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
           body: JSON.stringify({
             nodeId,
             complexity: state.editorSettings.complexity,
@@ -533,7 +539,7 @@ export const useMindMapStore = create<MindMapStore>()(
       try {
         const response = await fetch(`/api/maps/${state.mindMap.id}/summarize`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
           body: JSON.stringify({
             mindMapId: state.mindMap.id,
           }),
@@ -616,7 +622,7 @@ export const useMindMapStore = create<MindMapStore>()(
       try {
         const response = await fetch(`/api/maps/${state.mindMap.id}`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
           body: JSON.stringify({
             mindMap: state.mindMap,
           }),
@@ -637,8 +643,12 @@ export const useMindMapStore = create<MindMapStore>()(
       set({ isLoading: true, error: null });
 
       try {
-        const response = await fetch(`/api/maps/${id}`);
-        
+        const response = await fetch(`/api/maps/${id}`, {
+          headers: {
+            ...getAuthHeader(),
+          },
+        });
+
         if (!response.ok) {
           throw new Error('Failed to load mind map');
         }

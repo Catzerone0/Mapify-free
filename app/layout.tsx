@@ -4,8 +4,11 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "MindMap",
-  description: "Collaborative mind mapping application",
+  title: {
+    default: "Mapify",
+    template: "%s | Mapify",
+  },
+  description: "Mapify helps you generate, edit, and share mind maps from any content.",
 };
 
 export default function RootLayout({

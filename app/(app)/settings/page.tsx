@@ -50,7 +50,7 @@ export default function SettingsPage() {
       setLoading(true);
       const token = localStorage.getItem('auth_token');
       if (!token) {
-        router.push('/login');
+        router.push('/auth/login');
         return;
       }
 

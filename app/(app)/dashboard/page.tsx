@@ -1,208 +1,222 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Search, Sparkles, Plus } from "lucide-react";
+import { Card, CardContent, CardHeader } from "@/components/Card";
+import { Button } from "@/components/Button";
+import { Input } from "@/components/Input";
 import { useAuthStore } from "@/lib/stores/auth";
 import { useWorkspaceStore } from "@/lib/stores/workspace";
-import { Button } from "@/components/Button";
-import { Card, CardContent, CardHeader } from "@/components/Card";
-import { Input } from "@/components/Input";
+
+type MindMapListItem = {
+  id: string;
+  title: string;
+  description: string | null;
+  provider: string | null;
+  complexity: string | null;
+  workspaceId: string;
+  createdAt: string;
+  updatedAt: string;
+  nodeCount: number;
+  shared: boolean;
+};
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
-  const { workspaces, setWorkspaces, addWorkspace } = useWorkspaceStore();
-  const [loading, setLoading] = useState(false);
-  const [showNewWorkspace, setShowNewWorkspace] = useState(false);
-  const [workspaceName, setWorkspaceName] = useState("");
-  const [error, setError] = useState("");
+  const { isLoading } = useAuthStore();
+  const { currentWorkspace, workspaces } = useWorkspaceStore();
 
-  const fetchWorkspaces = useCallback(async () => {
-    try {
-      const response = await fetch("/api/workspaces", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-          "Content-Type": "application/json",
-        },
-      });
+  const [query, setQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [recentMaps, setRecentMaps] = useState<MindMapListItem[]>([]);
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch workspaces");
-      }
+  const activeWorkspaceId = useMemo(
+    () => currentWorkspace?.id || (workspaces[0] ? workspaces[0].id : null),
+    [currentWorkspace?.id, workspaces]
+  );
 
-      const data = await response.json();
-      setWorkspaces(data.data || []);
-    } catch {
-      setError("Failed to load workspaces. Please refresh the page.");
-    }
-  }, [setWorkspaces]);
-
-  useEffect(() => {
-    if (!isAuthenticated()) {
-      router.push("/auth/login");
-      return;
-    }
-
-    // Fetch workspaces
-    fetchWorkspaces();
-  }, [isAuthenticated, router, fetchWorkspaces]);
-
-  const handleCreateWorkspace = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
+  const fetchRecent = useCallback(async () => {
     setLoading(true);
+    setError(null);
 
     try {
-      if (!workspaceName.trim()) {
-        throw new Error("Workspace name is required");
-      }
+      const token = localStorage.getItem("auth_token");
+      const url = new URL("/api/maps", window.location.origin);
+      url.searchParams.set("take", "8");
+      if (query.trim()) url.searchParams.set("q", query.trim());
 
-      const response = await fetch("/api/workspaces", {
-        method: "POST",
+      const res = await fetch(url.toString(), {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({
-          name: workspaceName,
-        }),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to create workspace");
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.error?.message || data?.error || "Failed to load");
       }
 
-      const data = await response.json();
-      addWorkspace(data.data);
-      setWorkspaceName("");
-      setShowNewWorkspace(false);
+      setRecentMaps(data?.data?.mindMaps || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(err instanceof Error ? err.message : "Failed to load dashboard");
     } finally {
       setLoading(false);
     }
+  }, [query]);
+
+  useEffect(() => {
+    if (isLoading) return;
+    fetchRecent();
+  }, [fetchRecent, isLoading]);
+
+  const handleCreate = () => {
+    if (activeWorkspaceId) {
+      router.push(`/mindmap/create?workspace=${activeWorkspaceId}`);
+    } else {
+      router.push("/onboarding");
+    }
   };
 
-  if (!isAuthenticated()) {
-    return null;
-  }
-
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-background-secondary">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">MindMap</h1>
-            <p className="text-sm text-foreground-secondary">
-              Welcome, {user?.name || user?.email}
-            </p>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="ghost"
-              onClick={() => router.push("/settings")}
-            >
-              Settings
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={() => {
-                localStorage.removeItem("auth_token");
-                localStorage.removeItem("auth_user");
-                useAuthStore.setState({
-                  user: null,
-                  token: null,
-                });
-                router.push("/auth/login");
-              }}
-            >
-              Sign Out
-            </Button>
-          </div>
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
+        <div>
+          <h2 className="text-2xl font-semibold text-foreground">Dashboard</h2>
+          <p className="text-sm text-foreground-secondary">
+            Recent work and quick actions.
+          </p>
         </div>
-      </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold text-foreground">Workspaces</h2>
-          <Button onClick={() => setShowNewWorkspace(true)}>
-            New Workspace
+        <div className="flex gap-2">
+          <Button onClick={handleCreate}>
+            <Plus className="h-4 w-4" />
+            Quick create
           </Button>
+          <Link
+            href="/templates"
+            className="h-9 px-4 inline-flex items-center rounded-md border border-border hover:bg-accent"
+          >
+            <Sparkles className="h-4 w-4 mr-2" />
+            Templates
+          </Link>
         </div>
+      </div>
 
-        {showNewWorkspace && (
-          <Card className="mb-6">
-            <CardHeader>
-              <h3 className="text-lg font-semibold text-foreground">
-                Create New Workspace
-              </h3>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleCreateWorkspace} className="space-y-4">
-                {error && (
-                  <div className="p-3 bg-error/10 border border-error text-error rounded-md text-sm">
-                    {error}
-                  </div>
-                )}
-                <Input
-                  label="Workspace Name"
-                  value={workspaceName}
-                  onChange={(e) => setWorkspaceName(e.target.value)}
-                  placeholder="My Awesome Workspace"
-                  disabled={loading}
-                />
-                <div className="flex gap-2 justify-end">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => setShowNewWorkspace(false)}
-                    disabled={loading}
+      <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-lg font-semibold">Recent mind maps</h3>
+              <Link href="/maps" className="text-sm text-primary hover:underline">
+                View all
+              </Link>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="mb-4 relative">
+              <Search className="h-4 w-4 text-foreground-secondary absolute left-3 top-1/2 -translate-y-1/2" />
+              <Input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search maps by title…"
+                className="pl-9"
+              />
+              <div className="mt-2">
+                <Button variant="secondary" onClick={fetchRecent} disabled={loading}>
+                  Search
+                </Button>
+              </div>
+            </div>
+
+            {error && (
+              <div className="p-3 bg-error/10 border border-error text-error rounded-md text-sm">
+                {error}
+              </div>
+            )}
+
+            {loading ? (
+              <div className="text-sm text-foreground-secondary">Loading…</div>
+            ) : recentMaps.length === 0 ? (
+              <div className="text-sm text-foreground-secondary">
+                No maps yet. Click “Quick create” to generate your first mind map.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {recentMaps.map((m) => (
+                  <button
+                    key={m.id}
+                    onClick={() => router.push(`/mindmap/editor?id=${m.id}`)}
+                    className="text-left p-4 rounded-md border border-border hover:bg-accent transition-colors"
                   >
-                    Cancel
-                  </Button>
-                  <Button type="submit" loading={loading} disabled={loading}>
-                    Create
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        )}
+                    <div className="font-medium text-foreground truncate">{m.title}</div>
+                    <div className="mt-1 text-xs text-foreground-secondary">
+                      {m.nodeCount} nodes • {m.provider || "provider"}
+                      {m.shared ? " • shared" : ""}
+                    </div>
+                    {m.description && (
+                      <div className="mt-2 text-sm text-foreground-secondary line-clamp-2">
+                        {m.description}
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-        {workspaces.length === 0 ? (
-          <Card>
-            <CardContent className="text-center py-8">
-              <p className="text-foreground-secondary mb-4">
-                No workspaces yet. Create one to get started!
-              </p>
-              <Button onClick={() => setShowNewWorkspace(true)}>
-                Create First Workspace
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {workspaces.map((workspace) => (
-              <Card
-                key={workspace.id}
-                className="cursor-pointer hover:shadow-elevation-2 transition-shadow"
-                onClick={() => router.push(`/workspace/${workspace.id}`)}
+        <Card>
+          <CardHeader>
+            <h3 className="text-lg font-semibold">Usage stats</h3>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-foreground-secondary">Maps shown</span>
+              <span className="font-medium">{recentMaps.length}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-foreground-secondary">Nodes shown</span>
+              <span className="font-medium">
+                {recentMaps.reduce((sum, m) => sum + (m.nodeCount || 0), 0)}
+              </span>
+            </div>
+            <div className="text-xs text-foreground-secondary">
+              Stats are approximate and based on your recent maps.
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="mt-8">
+        <h3 className="text-lg font-semibold text-foreground">Workspaces</h3>
+        <p className="text-sm text-foreground-secondary">Switch context and manage maps.</p>
+
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {workspaces.length === 0 ? (
+            <Card>
+              <CardContent className="pt-6 text-sm text-foreground-secondary">
+                No workspaces yet. Complete onboarding to create your first one.
+              </CardContent>
+            </Card>
+          ) : (
+            workspaces.map((ws) => (
+              <button
+                key={ws.id}
+                onClick={() => router.push(`/workspace/${ws.id}`)}
+                className="text-left p-4 rounded-md border border-border hover:bg-accent transition-colors"
               >
-                <CardContent className="pt-4">
-                  <h3 className="text-lg font-semibold text-foreground mb-2">
-                    {workspace.name}
-                  </h3>
-                  <p className="text-sm text-foreground-secondary">
-                    Created {new Date(workspace.createdAt).toLocaleDateString()}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-      </main>
+                <div className="font-medium text-foreground">{ws.name}</div>
+                <div className="mt-1 text-xs text-foreground-secondary">
+                  Open workspace
+                </div>
+              </button>
+            ))
+          )}
+        </div>
+      </div>
     </div>
   );
 }

@@ -92,25 +92,27 @@ export async function POST(
     const provider = validated.provider || 'openai';
     const userKey = await db.userProviderKey.findFirst({
       where: {
-        userId: session.user.id!,
+        userId,
         provider,
       },
       orderBy: {
         isDefault: 'desc',
       },
     });
-    
+
     if (!userKey) {
       throw new ApiError(400, `No API key found for provider ${provider}`);
     }
-    
+
     // Create regeneration request (similar to expansion but regenerates the node itself)
     const regenerationRequest: ExpansionRequest = {
       nodeId: validated.nodeId,
-      prompt: validated.prompt || `Regenerate this node: ${targetNode.title || targetNode.content}`,
+      prompt:
+        validated.prompt ||
+        `Regenerate this node: ${targetNode.title || targetNode.content}`,
       complexity: validated.complexity,
       provider: validated.provider,
-      userId: session.user.id!,
+      userId,
     };
     
     // Start AI map engine

@@ -33,7 +33,7 @@ interface Workspace {
 export default function WorkspacePage() {
   const router = useRouter();
   const params = useParams();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, isLoading: authLoading } = useAuthStore();
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -64,11 +64,11 @@ export default function WorkspacePage() {
   }, [params]);
 
   useEffect(() => {
+    if (authLoading) return;
     if (!isAuthenticated()) {
       router.push("/auth/login");
-      return;
     }
-  }, [isAuthenticated, router]);
+  }, [authLoading, isAuthenticated, router]);
 
   useEffect(() => {
     const fetchWorkspace = async () => {
@@ -111,6 +111,14 @@ export default function WorkspacePage() {
   const handleCreateMindMap = () => {
     router.push(`/mindmap/create?workspace=${workspaceId}`);
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-[calc(100vh-3.5rem)] flex items-center justify-center text-foreground-secondary">
+        Loading…
+      </div>
+    );
+  }
 
   if (!isAuthenticated()) {
     return null;
