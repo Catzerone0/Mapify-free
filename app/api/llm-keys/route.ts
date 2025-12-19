@@ -14,6 +14,8 @@ import { z } from "zod";
 const addKeySchema = z.object({
   provider: z.enum(["openai", "anthropic", "google"]),
   apiKey: z.string().min(1),
+  label: z.string().optional(),
+  isDefault: z.boolean().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -35,26 +37,32 @@ export async function POST(request: NextRequest) {
       throw new ValidationError("Invalid LLM key data");
     }
 
-    const { provider, apiKey } = result.data;
+    const { provider, apiKey, label, isDefault } = result.data;
 
     // Encrypt the API key before storing
     const encryptedKey = encryptApiKey(apiKey);
 
-    // Create or update the provider key
-    const providerKey = await db.userProviderKey.upsert({
-      where: {
-        userId_provider: {
+    // If setting as default, unset others for this provider
+    if (isDefault) {
+      await db.userProviderKey.updateMany({
+        where: {
           userId: session.userId,
           provider,
         },
-      },
-      update: {
-        encryptedKey,
-      },
-      create: {
+        data: {
+          isDefault: false,
+        },
+      });
+    }
+
+    // Create the provider key
+    const providerKey = await db.userProviderKey.create({
+      data: {
         userId: session.userId,
         provider,
         encryptedKey,
+        label: label || `${provider.charAt(0).toUpperCase() + provider.slice(1)} Key`,
+        isDefault: isDefault || false,
       },
     });
 
@@ -67,6 +75,8 @@ export async function POST(request: NextRequest) {
       {
         id: providerKey.id,
         provider: providerKey.provider,
+        label: providerKey.label,
+        isDefault: providerKey.isDefault,
         createdAt: providerKey.createdAt,
         updatedAt: providerKey.updatedAt,
       },
@@ -94,9 +104,16 @@ export async function GET(request: NextRequest) {
       select: {
         id: true,
         provider: true,
+        label: true,
+        isDefault: true,
+        usage: true,
+        lastUsedAt: true,
         createdAt: true,
         updatedAt: true,
       },
+      orderBy: {
+        createdAt: 'desc'
+      }
     });
 
     return apiSuccess(providerKeys);

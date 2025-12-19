@@ -15,11 +15,13 @@ import {
   Upload,
   CheckCircle,
   Zap,
+  Settings,
 } from 'lucide-react';
 
 type ContentType = 'text' | 'youtube' | 'pdf' | 'web' | 'file';
-type ComplexityLevel = 'simple' | 'moderate' | 'complex';
+type ComplexityLevel = 'simple' | 'moderate' | 'detailed' | 'expert';
 type Provider = 'openai' | 'gemini';
+type Style = 'hierarchical' | 'radial' | 'mindmap' | 'flowchart';
 
 interface GenerationProgress {
   status: 'idle' | 'processing' | 'streaming' | 'completed' | 'error';
@@ -41,6 +43,12 @@ function MindMapCreateContent() {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [provider, setProvider] = useState<Provider>('openai');
   const [complexity, setComplexity] = useState<ComplexityLevel>('moderate');
+  const [style, setStyle] = useState<Style>('mindmap');
+  const [depth, setDepth] = useState(2);
+  const [includeCitations, setIncludeCitations] = useState(true);
+  const [autoSummarize, setAutoSummarize] = useState(false);
+  const [language, setLanguage] = useState('English');
+  
   const [availableProviders, setAvailableProviders] = useState<Provider[]>(['openai']);
 
   // Generation state
@@ -148,6 +156,11 @@ function MindMapCreateContent() {
       form.append('complexity', complexity);
       form.append('provider', provider);
       form.append('contentType', contentType);
+      form.append('style', style);
+      form.append('depth', depth.toString());
+      form.append('includeCitations', includeCitations.toString());
+      form.append('autoSummarize', autoSummarize.toString());
+      form.append('language', language);
 
       // Add content based on type
       if (contentType === 'text') {
@@ -500,13 +513,13 @@ function MindMapCreateContent() {
                   {contentType === 'youtube' && (
                     <div>
                       <label className="block text-sm font-medium text-foreground mb-2">
-                        YouTube URL
+                        YouTube Video URL
                       </label>
                       <Input
                         value={youtubeUrl}
                         onChange={(e) => setYoutubeUrl(e.target.value)}
                         placeholder="https://www.youtube.com/watch?v=..."
-                        type="url"
+                        icon={<Music className="h-4 w-4" />}
                       />
                     </div>
                   )}
@@ -514,13 +527,13 @@ function MindMapCreateContent() {
                   {contentType === 'web' && (
                     <div>
                       <label className="block text-sm font-medium text-foreground mb-2">
-                        Website URL
+                        Webpage URL
                       </label>
                       <Input
                         value={webUrl}
                         onChange={(e) => setWebUrl(e.target.value)}
-                        placeholder="https://example.com"
-                        type="url"
+                        placeholder="https://example.com/article"
+                        icon={<Globe className="h-4 w-4" />}
                       />
                     </div>
                   )}
@@ -528,29 +541,42 @@ function MindMapCreateContent() {
                   {contentType === 'pdf' && (
                     <div>
                       <label className="block text-sm font-medium text-foreground mb-2">
-                        PDF File
+                        Upload PDF Document
                       </label>
-                      <input
-                        type="file"
-                        accept=".pdf"
-                        onChange={handleFileSelect}
-                        className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-                      />
-                      {pdfFile && (
-                        <p className="text-xs text-foreground-secondary mt-1">
-                          Selected: {pdfFile.name}
+                      <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:bg-background-secondary transition-colors relative">
+                        <input
+                          type="file"
+                          accept=".pdf"
+                          onChange={handleFileSelect}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                        <Upload className="h-8 w-8 mx-auto mb-2 text-foreground-secondary" />
+                        <p className="text-sm font-medium text-foreground">
+                          {pdfFile ? pdfFile.name : 'Click to upload or drag and drop'}
                         </p>
-                      )}
+                        <p className="text-xs text-foreground-secondary mt-1">
+                          PDF files up to 10MB
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {contentType === 'file' && (
+                    <div className="text-center py-8 text-foreground-secondary">
+                      File upload support coming soon
                     </div>
                   )}
                 </div>
               </CardContent>
             </Card>
 
-            {/* Settings */}
+            {/* Generation Settings */}
             <Card className="mb-6">
               <CardHeader>
-                <h2 className="text-lg font-semibold text-foreground">Generation Settings</h2>
+                <div className="flex items-center space-x-2">
+                  <Settings className="h-5 w-5" />
+                  <h2 className="text-lg font-semibold text-foreground">Generation Settings</h2>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -559,79 +585,137 @@ function MindMapCreateContent() {
                     <label className="block text-sm font-medium text-foreground mb-2">
                       AI Provider
                     </label>
-                    <select
-                      value={provider}
-                      onChange={(e) => setProvider(e.target.value as Provider)}
-                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-                    >
-                      {availableProviders.map((p) => (
-                        <option key={p} value={p}>
-                          {p.charAt(0).toUpperCase() + p.slice(1)}
-                        </option>
+                    <div className="grid grid-cols-2 gap-3">
+                      {['openai', 'gemini'].map((p) => (
+                        <button
+                          key={p}
+                          onClick={() => setProvider(p as Provider)}
+                          disabled={!availableProviders.includes(p as Provider)}
+                          className={`p-3 rounded-lg border text-center transition-all ${
+                            provider === p
+                              ? 'border-primary bg-primary/5 text-primary'
+                              : 'border-border text-foreground-secondary hover:border-primary/50'
+                          } ${!availableProviders.includes(p as Provider) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                          <span className="text-sm font-medium capitalize">{p}</span>
+                        </button>
                       ))}
-                    </select>
+                    </div>
+                    {availableProviders.length === 0 && (
+                      <p className="text-xs text-error mt-2">
+                        No API keys configured. Please add keys in settings.
+                      </p>
+                    )}
                   </div>
 
-                  {/* Complexity Level */}
+                  {/* Complexity */}
                   <div>
                     <label className="block text-sm font-medium text-foreground mb-2">
                       Complexity Level
                     </label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {(['simple', 'moderate', 'complex'] as ComplexityLevel[]).map((level) => (
-                        <button
-                          key={level}
-                          onClick={() => setComplexity(level)}
-                          className={`px-3 py-2 rounded-lg border-2 transition-all text-sm font-medium ${
-                            complexity === level
-                              ? 'border-primary bg-primary/10 text-primary'
-                              : 'border-border text-foreground hover:border-primary/50'
-                          }`}
-                        >
-                          {level.charAt(0).toUpperCase() + level.slice(1)}
-                        </button>
-                      ))}
+                    <select
+                      value={complexity}
+                      onChange={(e) => setComplexity(e.target.value as ComplexityLevel)}
+                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                    >
+                      <option value="simple">Simple (Key points only)</option>
+                      <option value="moderate">Standard (Balanced depth)</option>
+                      <option value="detailed">Detailed (Comprehensive)</option>
+                      <option value="expert">Expert (Deep analysis)</option>
+                    </select>
+                  </div>
+
+                  {/* Style */}
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      Visual Style
+                    </label>
+                    <select
+                      value={style}
+                      onChange={(e) => setStyle(e.target.value as Style)}
+                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                    >
+                      <option value="mindmap">Classic Mind Map</option>
+                      <option value="hierarchical">Hierarchical (Top-Down)</option>
+                      <option value="radial">Radial (Center-Out)</option>
+                      <option value="flowchart">Flowchart (Sequential)</option>
+                    </select>
+                  </div>
+
+                  {/* Depth */}
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      Branch Depth (Levels: {depth})
+                    </label>
+                    <div className="flex items-center space-x-4">
+                      <input
+                        type="range"
+                        min="1"
+                        max="5"
+                        value={depth}
+                        onChange={(e) => setDepth(parseInt(e.target.value))}
+                        className="w-full accent-primary"
+                      />
                     </div>
+                  </div>
+                  
+                  {/* Language */}
+                   <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      Output Language
+                    </label>
+                    <Input
+                      value={language}
+                      onChange={(e) => setLanguage(e.target.value)}
+                      placeholder="e.g. English, Spanish, French"
+                    />
+                  </div>
+
+                  {/* Toggles */}
+                  <div className="md:col-span-2 flex flex-col md:flex-row gap-6 mt-2">
+                     <label className="flex items-center space-x-2 cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={includeCitations} 
+                          onChange={(e) => setIncludeCitations(e.target.checked)}
+                          className="rounded border-gray-300 text-primary focus:ring-primary h-5 w-5"
+                        />
+                        <span className="text-sm font-medium text-foreground">Include Citations</span>
+                     </label>
+                     
+                     <label className="flex items-center space-x-2 cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={autoSummarize} 
+                          onChange={(e) => setAutoSummarize(e.target.checked)}
+                          className="rounded border-gray-300 text-primary focus:ring-primary h-5 w-5"
+                        />
+                        <span className="text-sm font-medium text-foreground">Auto-summarize</span>
+                     </label>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Error Message */}
-            {progress.status === 'error' && (
-              <Card className="mb-6 border-error/20 bg-error/5">
-                <CardContent className="pt-4">
-                  <div className="flex items-start space-x-3">
-                    <AlertCircle className="h-5 w-5 text-error mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="text-sm font-medium text-error mb-1">Error</p>
-                      <p className="text-sm text-foreground">{progress.error}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Action Buttons */}
-            <div className="flex justify-end gap-3">
+            {/* Generate Button */}
+            <div className="flex justify-end pb-8">
               <Button
-                onClick={handleGoBack}
-                variant="secondary"
-              >
-                Cancel
-              </Button>
-              <Button
+                size="lg"
                 onClick={handleGenerate}
-                disabled={
-                  !prompt.trim() && contentType === 'text' ||
-                  !youtubeUrl.trim() && contentType === 'youtube' ||
-                  !webUrl.trim() && contentType === 'web' ||
-                  !pdfFile && contentType === 'pdf'
-                }
-                className="flex items-center gap-2"
+                disabled={isGenerating || availableProviders.length === 0}
+                className="w-full md:w-auto"
               >
-                <Zap className="h-4 w-4" />
-                Generate Mind Map
+                {isGenerating ? (
+                  <>
+                    <Loader className="mr-2 h-4 w-4 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Zap className="mr-2 h-4 w-4" />
+                    Generate Mind Map
+                  </>
+                )}
               </Button>
             </div>
           </>
@@ -643,7 +727,11 @@ function MindMapCreateContent() {
 
 export default function MindMapCreatePage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><div>Loading...</div></div>}>
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader className="h-8 w-8 text-primary animate-spin" />
+      </div>
+    }>
       <MindMapCreateContent />
     </Suspense>
   );

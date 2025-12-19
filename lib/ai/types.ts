@@ -2,7 +2,7 @@
  * Canonical mind-map data contract and utility types
  */
 
-export type ComplexityLevel = 'simple' | 'moderate' | 'complex';
+export type ComplexityLevel = 'simple' | 'moderate' | 'complex' | 'detailed' | 'expert';
 
 export interface Citation {
   id?: string;
@@ -61,6 +61,11 @@ export interface GenerationRequest {
   workspaceId: string;
   existingMapId?: string;
   expandNodeId?: string;
+  style?: 'hierarchical' | 'radial' | 'mindmap' | 'flowchart';
+  depth?: number;
+  includeCitations?: boolean;
+  autoSummarize?: boolean;
+  language?: string;
 }
 
 export interface ExpansionRequest {

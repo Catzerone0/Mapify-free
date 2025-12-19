@@ -98,20 +98,28 @@ export default function DashboardPage() {
               Welcome, {user?.name || user?.email}
             </p>
           </div>
-          <Button
-            variant="secondary"
-            onClick={() => {
-              localStorage.removeItem("auth_token");
-              localStorage.removeItem("auth_user");
-              useAuthStore.setState({
-                user: null,
-                token: null,
-              });
-              router.push("/auth/login");
-            }}
-          >
-            Sign Out
-          </Button>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="ghost"
+              onClick={() => router.push("/settings")}
+            >
+              Settings
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                localStorage.removeItem("auth_token");
+                localStorage.removeItem("auth_user");
+                useAuthStore.setState({
+                  user: null,
+                  token: null,
+                });
+                router.push("/auth/login");
+              }}
+            >
+              Sign Out
+            </Button>
+          </div>
         </div>
       </header>
 

@@ -19,11 +19,16 @@ const GenerationSchema = z.object({
   prompt: z.string().optional(),
   youtubeUrl: z.string().optional(),
   webUrl: z.string().optional(),
-  complexity: z.enum(['simple', 'moderate', 'complex']).optional(),
+  complexity: z.enum(['simple', 'moderate', 'complex', 'detailed', 'expert']).optional(),
   provider: z.enum(['openai', 'gemini', 'anthropic']).optional(),
   workspaceId: z.string().min(1, 'Workspace ID is required'),
   contentType: z.enum(['text', 'youtube', 'pdf', 'web', 'file']).optional(),
   existingMapId: z.string().optional(),
+  style: z.enum(['hierarchical', 'radial', 'mindmap', 'flowchart']).optional(),
+  depth: z.union([z.string(), z.number()]).transform(val => Number(val)).optional(),
+  includeCitations: z.union([z.string(), z.boolean()]).transform(val => val === true || val === 'true').optional(),
+  autoSummarize: z.union([z.string(), z.boolean()]).transform(val => val === true || val === 'true').optional(),
+  language: z.string().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -237,6 +242,11 @@ export async function POST(request: NextRequest) {
             userId,
             workspaceId: validated.workspaceId,
             existingMapId: validated.existingMapId,
+            style: validated.style,
+            depth: validated.depth,
+            includeCitations: validated.includeCitations,
+            autoSummarize: validated.autoSummarize,
+            language: validated.language,
           };
 
           // Start AI map engine

@@ -465,6 +465,13 @@ export class AIMapEngine {
         provider: data.provider,
         complexity: data.complexity,
         workspaceId: request.workspaceId,
+        layout: request.style,
+        settings: {
+          depth: request.depth,
+          includeCitations: request.includeCitations,
+          autoSummarize: request.autoSummarize,
+          language: request.language,
+        },
       },
     });
     
