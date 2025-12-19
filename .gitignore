@@ -39,6 +39,11 @@ next-env.d.ts
 
 # prisma
 .env.local
+dev.db
+dev.db-journal
+test.db
+test.db-journal
+*.db-journal
 
 # redis/bullmq
 redis-data/

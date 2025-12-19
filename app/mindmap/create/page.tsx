@@ -83,8 +83,8 @@ function MindMapCreateContent() {
           }
         }
       }
-    } catch (error) {
-      console.error('Failed to fetch available providers:', error);
+    } catch {
+      // Silently handle - provider selection is not critical
     }
   }, [provider]);
 

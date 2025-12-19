@@ -75,8 +75,8 @@ export default function SettingsPage() {
         setApiKeys(keysData.data || []);
       }
       
-    } catch (error) {
-      console.error('Failed to fetch settings:', error);
+    } catch {
+      // Failed to fetch settings
     } finally {
       setLoading(false);
     }
@@ -107,8 +107,8 @@ export default function SettingsPage() {
       if (response.ok) {
         // Show success
       }
-    } catch (error) {
-      console.error('Failed to update profile:', error);
+    } catch {
+      // Failed to update profile
     } finally {
       setSaving(false);
     }
@@ -134,8 +134,8 @@ export default function SettingsPage() {
         setShowKeyForm(false);
         fetchData(); // Refresh keys
       }
-    } catch (error) {
-      console.error('Failed to add key:', error);
+    } catch {
+      // Failed to add key
     }
   };
 
@@ -150,8 +150,8 @@ export default function SettingsPage() {
         },
       });
       fetchData();
-    } catch (error) {
-      console.error('Failed to delete key:', error);
+    } catch {
+      // Failed to delete key
     }
   };
 
