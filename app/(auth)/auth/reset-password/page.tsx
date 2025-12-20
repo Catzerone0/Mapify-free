@@ -1,13 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardHeader } from "@/components/Card";
 import { Input } from "@/components/Input";
 import { Button } from "@/components/Button";
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -114,5 +114,19 @@ export default function ResetPasswordPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-[calc(100vh-3.5rem)] flex items-center justify-center text-foreground-secondary">
+          Loading…
+        </div>
+      }
+    >
+      <ResetPasswordContent />
+    </Suspense>
   );
 }

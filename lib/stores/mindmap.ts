@@ -7,7 +7,7 @@ import {
 } from '@/lib/ai/types';
 import { v4 as uuidv4 } from 'uuid';
 
-function getAuthHeader() {
+function getAuthHeader(): Record<string, string> {
   if (typeof window === 'undefined') return {};
   const token = localStorage.getItem('auth_token');
   return token ? { Authorization: `Bearer ${token}` } : {};

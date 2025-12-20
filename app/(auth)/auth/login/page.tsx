@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/Button";
@@ -8,7 +8,7 @@ import { Input } from "@/components/Input";
 import { Card, CardContent, CardHeader } from "@/components/Card";
 import { useAuthStore } from "@/lib/stores/auth";
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const from = useMemo(() => searchParams.get("from") || "/dashboard", [searchParams]);
@@ -133,5 +133,19 @@ export default function LoginPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-[calc(100vh-3.5rem)] flex items-center justify-center text-foreground-secondary">
+          Loading…
+        </div>
+      }
+    >
+      <LoginPageContent />
+    </Suspense>
   );
 }

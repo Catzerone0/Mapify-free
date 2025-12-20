@@ -72,10 +72,8 @@ export default function MyMapsPage() {
     fetchMaps();
   }, [fetchMaps, isLoading]);
 
-  const workspaceOptions = useMemo(() => {
-    return [{ id: "all", name: "All workspaces" } as const].concat(
-      workspaces.map((w) => ({ id: w.id, name: w.name }))
-    );
+  const workspaceOptions = useMemo((): Array<{ id: string; name: string }> => {
+    return [{ id: "all", name: "All workspaces" }, ...workspaces.map((w) => ({ id: w.id, name: w.name }))];
   }, [workspaces]);
 
   return (

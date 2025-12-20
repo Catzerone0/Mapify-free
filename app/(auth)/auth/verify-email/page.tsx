@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardHeader } from "@/components/Card";
 import { Button } from "@/components/Button";
 import { useAuthStore } from "@/lib/stores/auth";
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
@@ -61,9 +61,7 @@ export default function VerifyEmailPage() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <h1 className="text-2xl font-bold text-foreground">Verify your email</h1>
-          <p className="text-sm text-foreground-secondary mt-1">
-            {loading ? "Verifying…" : ""}
-          </p>
+          <p className="text-sm text-foreground-secondary mt-1">{loading ? "Verifying…" : ""}</p>
         </CardHeader>
         <CardContent>
           {error ? (
@@ -91,5 +89,19 @@ export default function VerifyEmailPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-[calc(100vh-3.5rem)] flex items-center justify-center text-foreground-secondary">
+          Loading…
+        </div>
+      }
+    >
+      <VerifyEmailContent />
+    </Suspense>
   );
 }
