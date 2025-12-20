@@ -5,7 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
-import { auth } from '@/lib/auth';
+import { getAuthUser } from '@/lib/middleware';
 import { MindMapData, MapNodeData } from '@/lib/ai/types';
 import { ApiError } from '@/lib/errors';
 
@@ -36,11 +36,14 @@ export async function GET(
     const { id: mindMapId } = await params;
     
     // Authenticate user
-    const session = await auth();
-    if (!session?.user?.id) {
+    let userId: string;
+    try {
+      const user = await getAuthUser(request);
+      userId = user.id;
+    } catch {
       throw new ApiError(401, 'Unauthorized');
     }
-    
+
     // Get mind map with user access validation
     const mindMap = await db.mindMap.findFirst({
       where: {
@@ -48,7 +51,7 @@ export async function GET(
         workspace: {
           members: {
             some: {
-              userId: session.user.id!,
+              userId,
             },
           },
         },
@@ -183,11 +186,14 @@ export async function PATCH(
     // In a real implementation, you'd have a proper rate limiter for saves
     
     // Authenticate user
-    const session = await auth();
-    if (!session?.user?.id) {
+    let userId: string;
+    try {
+      const user = await getAuthUser(request);
+      userId = user.id;
+    } catch {
       throw new ApiError(401, 'Unauthorized');
     }
-    
+
     // Parse and validate request body
     const body = await request.json();
     const validated = MindMapUpdateSchema.parse(body);
@@ -199,7 +205,7 @@ export async function PATCH(
         workspace: {
           members: {
             some: {
-              userId: session.user.id!,
+              userId,
             },
           },
         },

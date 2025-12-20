@@ -5,7 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
-import { auth } from '@/lib/auth';
+import { getAuthUser } from '@/lib/middleware';
 import { AIMapEngine } from '@/lib/ai/engine';
 import { ExpansionRequest } from '@/lib/ai/types';
 import { ApiError } from '@/lib/errors';
@@ -36,11 +36,14 @@ export async function POST(
     }
     
     // Authenticate user
-    const session = await auth();
-    if (!session?.user?.id) {
+    let userId: string;
+    try {
+      const user = await getAuthUser(request);
+      userId = user.id;
+    } catch {
       throw new ApiError(401, 'Unauthorized');
     }
-    
+
     // Parse and validate request body
     const body = await request.json();
     const validated = RegenerationSchema.parse(body);
@@ -52,7 +55,7 @@ export async function POST(
         workspace: {
           members: {
             some: {
-              userId: session.user.id!,
+              userId,
             },
           },
         },
@@ -67,7 +70,7 @@ export async function POST(
         workspace: {
           include: {
             members: {
-              where: { userId: session.user.id! },
+              where: { userId },
             },
           },
         },
@@ -89,25 +92,27 @@ export async function POST(
     const provider = validated.provider || 'openai';
     const userKey = await db.userProviderKey.findFirst({
       where: {
-        userId: session.user.id!,
+        userId,
         provider,
       },
       orderBy: {
         isDefault: 'desc',
       },
     });
-    
+
     if (!userKey) {
       throw new ApiError(400, `No API key found for provider ${provider}`);
     }
-    
+
     // Create regeneration request (similar to expansion but regenerates the node itself)
     const regenerationRequest: ExpansionRequest = {
       nodeId: validated.nodeId,
-      prompt: validated.prompt || `Regenerate this node: ${targetNode.title || targetNode.content}`,
+      prompt:
+        validated.prompt ||
+        `Regenerate this node: ${targetNode.title || targetNode.content}`,
       complexity: validated.complexity,
       provider: validated.provider,
-      userId: session.user.id!,
+      userId,
     };
     
     // Start AI map engine

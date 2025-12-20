@@ -5,7 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
-import { auth } from '@/lib/auth';
+import { getAuthUser } from '@/lib/middleware';
 import { AIMapEngine } from '@/lib/ai/engine';
 import { IngestionService } from '@/lib/ingest/service';
 import {
@@ -44,12 +44,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Authenticate user
-    const session = await auth();
-    if (!session?.user?.id) {
+    let userId: string;
+    try {
+      const user = await getAuthUser(request);
+      userId = user.id;
+    } catch {
       throw new ApiError(401, 'Unauthorized');
     }
-
-    const userId = session.user.id;
 
     // Parse FormData or JSON
     const contentType = request.headers.get('content-type');

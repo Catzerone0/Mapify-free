@@ -6,6 +6,7 @@ import { rateLimiter, rateLimitConfigs } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 import bcrypt from "bcrypt";
 import { z } from "zod";
+import { signToken } from "@/lib/auth-tokens";
 
 const registerSchema = z.object({
   email: z.string().email(),
@@ -41,14 +42,28 @@ export async function POST(request: NextRequest) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create user
+    // Create user (requires email verification by default)
     const user = await db.user.create({
       data: {
         email,
         password: hashedPassword,
         name: name || email.split("@")[0],
+        preferences: {
+          emailVerified: false,
+          onboardingComplete: false,
+        },
       },
     });
+
+    const exp = Math.floor(Date.now() / 1000) + 24 * 60 * 60;
+    const token = signToken({
+      p: "verify_email",
+      sub: user.id,
+      exp,
+    });
+
+    const origin = request.nextUrl.origin;
+    const verifyUrl = `${origin}/auth/verify-email?token=${encodeURIComponent(token)}`;
 
     logger.info("User registered", {
       userId: user.id,
@@ -57,9 +72,13 @@ export async function POST(request: NextRequest) {
 
     return apiSuccess(
       {
-        id: user.id,
-        email: user.email,
-        name: user.name,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+        },
+        requiresEmailVerification: true,
+        verifyUrl,
       },
       201
     );

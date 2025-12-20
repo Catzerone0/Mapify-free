@@ -79,13 +79,12 @@ export function MindMapEditor({ mindMapId }: MindMapEditorProps) {
   // Initialize current user ID from token (memoized to avoid re-computation)
   const initialUserId = React.useMemo(() => {
     if (typeof window === 'undefined') return '';
-    const token = localStorage.getItem('token');
-    if (!token) return '';
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.userId || '';
-    } catch (e) {
-      console.error('Failed to parse token:', e);
+      const raw = localStorage.getItem('auth_user');
+      if (!raw) return '';
+      const user = JSON.parse(raw) as { id?: string };
+      return user.id || '';
+    } catch {
       return '';
     }
   }, []);
@@ -98,7 +97,8 @@ export function MindMapEditor({ mindMapId }: MindMapEditorProps) {
   }, [initialUserId, currentUserId]);
 
   // WebSocket integration for real-time collaboration
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') || '' : '';
+  const token =
+    typeof window !== 'undefined' ? localStorage.getItem('auth_token') || '' : '';
   const {
     isConnected,
     presenceList,

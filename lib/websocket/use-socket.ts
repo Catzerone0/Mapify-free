@@ -34,7 +34,10 @@ export function useSocket(options: UseSocketOptions) {
   const [presenceList, setPresenceList] = useState<UserPresenceData[]>([]);
 
   useEffect(() => {
-    if (!token || !mindMapId) return;
+    const enabled =
+      typeof window !== 'undefined' && localStorage.getItem('mapify_ws_enabled') === '1';
+
+    if (!enabled || !token || !mindMapId) return;
 
     // Initialize socket connection
     const socket = io({
@@ -48,18 +51,16 @@ export function useSocket(options: UseSocketOptions) {
     socketRef.current = socket;
 
     socket.on('connect', () => {
-      console.log('Socket connected');
       setIsConnected(true);
       socket.emit('join-map', { mindMapId });
     });
 
     socket.on('disconnect', () => {
-      console.log('Socket disconnected');
       setIsConnected(false);
     });
 
-    socket.on('error', (error: { message: string }) => {
-      console.error('Socket error:', error.message);
+    socket.on('error', () => {
+      setIsConnected(false);
     });
 
     socket.on('user-joined', (presence: UserPresenceData) => {

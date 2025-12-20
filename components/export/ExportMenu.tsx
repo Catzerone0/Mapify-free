@@ -33,10 +33,10 @@ export function ExportMenu({ mindMapId, mindMapTitle, onClose }: ExportMenuProps
     setExportFormat(format);
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('auth_token');
       const response = await fetch(`/api/maps/${mindMapId}/export?format=${format}`, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       });
 
