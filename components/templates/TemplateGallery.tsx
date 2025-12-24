@@ -33,8 +33,7 @@ export function TemplateGallery({ onClose, onSelectTemplate }: TemplateGalleryPr
         setTemplates(data.data.templates);
         setCategories(['all', ...data.data.categories]);
       }
-    } catch (error) {
-      console.error('Error fetching templates:', error);
+    } catch {
     } finally {
       setLoading(false);
     }

@@ -54,8 +54,7 @@ export function ExportMenu({ mindMapId, mindMapTitle, onClose }: ExportMenuProps
       } else {
         alert('Failed to export mind map');
       }
-    } catch (error) {
-      console.error('Error exporting:', error);
+    } catch {
       alert('Failed to export mind map');
     } finally {
       setExporting(false);
@@ -84,8 +83,7 @@ export function ExportMenu({ mindMapId, mindMapTitle, onClose }: ExportMenuProps
       link.download = `${mindMapTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.${format}`;
       link.href = dataUrl;
       link.click();
-    } catch (error) {
-      console.error('Error exporting image:', error);
+    } catch {
       alert('Failed to export image');
     } finally {
       setExporting(false);

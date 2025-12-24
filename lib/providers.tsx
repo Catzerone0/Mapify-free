@@ -47,8 +47,8 @@ export function Providers({ children }: { children: ReactNode }) {
         }
 
         setLoading(false);
-      } catch (error) {
-        console.error("Failed to initialize auth", error);
+      } catch {
+        // Failed to initialize auth - silently set loading to false
         setLoading(false);
       }
     };
