@@ -10,6 +10,7 @@ import { AIMapEngine } from '@/lib/ai/engine';
 import { SummarizationRequest } from '@/lib/ai/types';
 import { ApiError } from '@/lib/errors';
 import { rateLimiter } from '@/lib/rate-limit';
+import { logger } from '@/lib/logger';
 
 const SummarizationSchema = z.object({
   mindMapId: z.string().min(1, 'Mind map ID is required'),
@@ -125,7 +126,7 @@ export async function POST(
       );
     }
     
-    console.error('Mind map summarization error:', error);
+    logger.error('Mind map summarization error', error);
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }

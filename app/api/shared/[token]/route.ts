@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { db as prisma } from '@/lib/db';
 import { apiResponse, ApiError } from '@/lib/api-response';
 import bcrypt from 'bcrypt';
+import { logger } from '@/lib/logger';
 
 // GET /api/shared/[token] - Access a shared mind map
 export async function GET(
@@ -121,7 +122,7 @@ export async function GET(
     if (error instanceof ApiError) {
       return apiResponse(null, error.message, error.statusCode);
     }
-    console.error('Error accessing shared map:', error);
+    logger.error('Error accessing shared map', error);
     return apiResponse(null, 'Failed to access shared map', 500);
   }
 }
@@ -185,7 +186,7 @@ export async function PATCH(
     if (error instanceof ApiError) {
       return apiResponse(null, error.message, error.statusCode);
     }
-    console.error('Error updating shared map:', error);
+    logger.error('Error updating shared map', error);
     return apiResponse(null, 'Failed to update shared map', 500);
   }
 }

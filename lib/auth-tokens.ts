@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from "crypto";
-import { env } from "@/env";
+import { env } from "@/lib/env";
 
 export type TokenPurpose = "verify_email" | "reset_password";
 

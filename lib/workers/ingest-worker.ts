@@ -2,7 +2,7 @@
  * Background worker for processing content ingestion jobs
  */
 import { Worker } from 'bullmq';
-import { env } from '@/env';
+import { env } from '@/lib/env';
 import { logger } from '@/lib/logger';
 import { ingestionService } from '@/lib/ingest/service';
 import { JobType } from '@/lib/queue';

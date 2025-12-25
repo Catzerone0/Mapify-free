@@ -24,11 +24,16 @@ yarn-debug.log*
 yarn-error.log*
 
 # local env files
-.env
+# NOTE: .env is committed to repo with defaults
+# .env.local and variants are ignored
 .env.local
+.env.development
 .env.development.local
+.env.test
 .env.test.local
+.env.production
 .env.production.local
+.env.staging
 
 # vercel
 .vercel

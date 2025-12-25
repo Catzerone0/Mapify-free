@@ -10,6 +10,7 @@ import { AIMapEngine } from '@/lib/ai/engine';
 import { ExpansionRequest } from '@/lib/ai/types';
 import { ApiError } from '@/lib/errors';
 import { rateLimiter } from '@/lib/rate-limit';
+import { logger } from '@/lib/logger';
 
 const RegenerationSchema = z.object({
   nodeId: z.string().min(1, 'Node ID is required'),
@@ -153,7 +154,7 @@ export async function POST(
       );
     }
     
-    console.error('Node regeneration error:', error);
+    logger.error('Node regeneration error', error);
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }

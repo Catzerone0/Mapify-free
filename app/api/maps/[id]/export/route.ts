@@ -3,6 +3,7 @@ import { db as prisma } from '@/lib/db';
 import { getAuthUser } from '@/lib/middleware';
 import { apiResponse, ApiError } from '@/lib/api-response';
 import { ExportService } from '@/lib/export/export-service';
+import { logger } from '@/lib/logger';
 
 // GET /api/maps/[id]/export?format=markdown|text|json
 export async function GET(
@@ -60,7 +61,7 @@ export async function GET(
     if (error instanceof ApiError) {
       return apiResponse(null, error.message, error.statusCode);
     }
-    console.error('Error exporting mind map:', error);
+    logger.error('Error exporting mind map', error);
     return apiResponse(null, 'Failed to export mind map', 500);
   }
 }

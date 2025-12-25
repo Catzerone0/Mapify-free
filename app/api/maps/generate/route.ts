@@ -14,6 +14,7 @@ import {
 import { ApiError } from '@/lib/errors';
 import { rateLimiter } from '@/lib/rate-limit';
 import { SourceType } from '@/lib/ingest/types';
+import { logger } from '@/lib/logger';
 
 const GenerationSchema = z.object({
   prompt: z.string().optional(),
@@ -355,7 +356,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error('Mind map generation error:', error);
+    logger.error('Mind map generation error', error);
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }
