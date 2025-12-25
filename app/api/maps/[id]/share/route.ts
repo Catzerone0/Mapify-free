@@ -5,6 +5,8 @@ import { apiResponse, ApiError } from '@/lib/api-response';
 import { z } from 'zod';
 import bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
+import { logger } from '@/lib/logger';
+import { env } from '@/lib/env';
 
 const createShareLinkSchema = z.object({
   role: z.enum(['owner', 'editor', 'viewer']),
@@ -76,19 +78,21 @@ export async function POST(
       },
     });
 
+    const baseUrl = env.NEXTAUTH_URL || env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+
     return apiResponse({
       id: shareLink.id,
       token: shareLink.token,
       role: shareLink.role,
       expiresAt: shareLink.expiresAt,
       hasPassword: !!shareLink.password,
-      url: `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/shared/${shareLink.token}`,
+      url: `${baseUrl}/shared/${shareLink.token}`,
     });
   } catch (error) {
     if (error instanceof ApiError) {
       return apiResponse(null, error.message, error.statusCode);
     }
-    console.error('Error creating share link:', error);
+    logger.error('Error creating share link', error);
     return apiResponse(null, 'Failed to create share link', 500);
   }
 }
@@ -134,6 +138,8 @@ export async function GET(
       },
     });
 
+    const baseUrl = env.NEXTAUTH_URL || env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+
     const linksWithUrls = shareLinks.map((link) => ({
       id: link.id,
       token: link.token,
@@ -141,7 +147,7 @@ export async function GET(
       expiresAt: link.expiresAt,
       createdAt: link.createdAt,
       hasPassword: !!link.password,
-      url: `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/shared/${link.token}`,
+      url: `${baseUrl}/shared/${link.token}`,
     }));
 
     return apiResponse(linksWithUrls);
@@ -149,7 +155,7 @@ export async function GET(
     if (error instanceof ApiError) {
       return apiResponse(null, error.message, error.statusCode);
     }
-    console.error('Error fetching share links:', error);
+    logger.error('Error fetching share links', error);
     return apiResponse(null, 'Failed to fetch share links', 500);
   }
 }
@@ -206,7 +212,7 @@ export async function DELETE(
     if (error instanceof ApiError) {
       return apiResponse(null, error.message, error.statusCode);
     }
-    console.error('Error deleting share links:', error);
+    logger.error('Error deleting share links', error);
     return apiResponse(null, 'Failed to delete share links', 500);
   }
 }

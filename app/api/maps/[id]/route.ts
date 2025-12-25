@@ -8,6 +8,7 @@ import { db } from '@/lib/db';
 import { getAuthUser } from '@/lib/middleware';
 import { MindMapData, MapNodeData } from '@/lib/ai/types';
 import { ApiError } from '@/lib/errors';
+import { logger } from '@/lib/logger';
 
 const MindMapUpdateSchema = z.object({
   mindMap: z.object({
@@ -167,7 +168,7 @@ export async function GET(
       );
     }
     
-    console.error('Get mind map error:', error);
+    logger.error('Get mind map error', error);
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }
@@ -342,7 +343,7 @@ export async function PATCH(
       );
     }
     
-    console.error('Update mind map error:', error);
+    logger.error('Update mind map error', error);
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }
