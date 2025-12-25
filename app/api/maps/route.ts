@@ -28,8 +28,8 @@ export async function GET(request: NextRequest) {
         ...(q
           ? {
               OR: [
-                { title: { contains: q, mode: "insensitive" } },
-                { description: { contains: q, mode: "insensitive" } },
+                { title: { contains: q } },
+                { description: { contains: q } },
               ],
             }
           : {}),

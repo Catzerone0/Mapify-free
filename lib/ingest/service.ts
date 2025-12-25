@@ -207,7 +207,9 @@ export class IngestionService {
     return {
       status: contentSource.status,
       error: contentSource.error || undefined,
-      metadata: contentSource.metadata as Record<string, unknown> | undefined,
+      metadata: contentSource.metadata 
+        ? JSON.parse(contentSource.metadata) as Record<string, unknown> 
+        : undefined,
     };
   }
 

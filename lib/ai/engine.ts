@@ -423,7 +423,7 @@ export class AIMapEngine {
           where: { id: job.id },
           data: {
             status: 'completed',
-            result: { summary: response.content },
+            result: JSON.stringify({ summary: response.content }),
             tokensUsed: response.tokensUsed,
             completedAt: new Date(),
           },
@@ -467,12 +467,12 @@ export class AIMapEngine {
         complexity: data.complexity,
         workspaceId: request.workspaceId,
         layout: request.style,
-        settings: {
+        settings: JSON.stringify({
           depth: request.depth,
           includeCitations: request.includeCitations,
           autoSummarize: request.autoSummarize,
           language: request.language,
-        },
+        }),
       },
     });
     

@@ -1,107 +1,231 @@
 -- CreateTable User
 CREATE TABLE "User" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "email" TEXT NOT NULL,
     "name" TEXT,
     "password" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+    "avatar" TEXT,
+    "bio" TEXT,
+    "language" TEXT NOT NULL DEFAULT 'en',
+    "theme" TEXT NOT NULL DEFAULT 'auto',
+    "preferences" TEXT,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
 );
 
 -- CreateTable Session
 CREATE TABLE "Session" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "userId" TEXT NOT NULL,
     "token" TEXT NOT NULL,
-    "expiresAt" TIMESTAMP(3) NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "Session_pkey" PRIMARY KEY ("id")
+    "expiresAt" DATETIME NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- CreateTable Workspace
 CREATE TABLE "Workspace" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "name" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "Workspace_pkey" PRIMARY KEY ("id")
+    "icon" TEXT,
+    "color" TEXT,
+    "visibility" TEXT NOT NULL DEFAULT 'private',
+    "settings" TEXT,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
 );
 
 -- CreateTable WorkspaceMember
 CREATE TABLE "WorkspaceMember" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "userId" TEXT NOT NULL,
     "workspaceId" TEXT NOT NULL,
-    "role" TEXT NOT NULL DEFAULT 'member',
-
-    CONSTRAINT "WorkspaceMember_pkey" PRIMARY KEY ("id")
+    "role" TEXT NOT NULL DEFAULT 'member'
 );
 
 -- CreateTable MindMap
 CREATE TABLE "MindMap" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "title" TEXT NOT NULL,
     "description" TEXT,
+    "summary" TEXT,
+    "prompt" TEXT,
+    "provider" TEXT,
+    "complexity" TEXT,
+    "layout" TEXT,
+    "style" TEXT,
+    "settings" TEXT,
     "workspaceId" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "MindMap_pkey" PRIMARY KEY ("id")
+    "embeddings" TEXT,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
 );
 
 -- CreateTable MapNode
 CREATE TABLE "MapNode" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "mindMapId" TEXT NOT NULL,
+    "title" TEXT,
     "content" TEXT NOT NULL,
-    "x" DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "y" DOUBLE PRECISION NOT NULL DEFAULT 0,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "parentId" TEXT,
+    "x" REAL NOT NULL DEFAULT 0,
+    "y" REAL NOT NULL DEFAULT 0,
+    "width" REAL NOT NULL DEFAULT 200,
+    "height" REAL NOT NULL DEFAULT 100,
+    "color" TEXT,
+    "shape" TEXT NOT NULL DEFAULT 'rectangle',
+    "style" TEXT,
+    "level" INTEGER NOT NULL DEFAULT 0,
+    "order" INTEGER NOT NULL DEFAULT 0,
+    "isCollapsed" BOOLEAN NOT NULL DEFAULT false,
+    "embeddings" TEXT,
+    "lockedBy" TEXT,
+    "lockedAt" DATETIME,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
+);
 
-    CONSTRAINT "MapNode_pkey" PRIMARY KEY ("id")
+-- CreateTable NodeCitation
+CREATE TABLE "NodeCitation" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "nodeId" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "url" TEXT,
+    "summary" TEXT,
+    "author" TEXT,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- CreateTable GenerationJob
+CREATE TABLE "GenerationJob" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "mindMapId" TEXT,
+    "nodeId" TEXT,
+    "prompt" TEXT NOT NULL,
+    "provider" TEXT NOT NULL,
+    "status" TEXT NOT NULL,
+    "result" TEXT,
+    "error" TEXT,
+    "tokensUsed" INTEGER NOT NULL DEFAULT 0,
+    "startedAt" DATETIME,
+    "completedAt" DATETIME,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
 );
 
 -- CreateTable ContentAttachment
 CREATE TABLE "ContentAttachment" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "nodeId" TEXT NOT NULL,
     "type" TEXT NOT NULL,
     "url" TEXT,
     "content" TEXT,
-    "metadata" JSONB,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "ContentAttachment_pkey" PRIMARY KEY ("id")
+    "metadata" TEXT,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- CreateTable Template
 CREATE TABLE "Template" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "name" TEXT NOT NULL,
     "description" TEXT,
-    "content" JSONB NOT NULL,
+    "content" TEXT NOT NULL,
     "workspaceId" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "Template_pkey" PRIMARY KEY ("id")
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
 );
 
 -- CreateTable UserProviderKey
 CREATE TABLE "UserProviderKey" (
-    "id" TEXT NOT NULL,
+    "id" TEXT NOT NULL PRIMARY KEY,
     "userId" TEXT NOT NULL,
     "provider" TEXT NOT NULL,
+    "label" TEXT,
     "encryptedKey" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "isDefault" BOOLEAN NOT NULL DEFAULT false,
+    "usage" TEXT,
+    "lastUsedAt" DATETIME,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
+);
 
-    CONSTRAINT "UserProviderKey_pkey" PRIMARY KEY ("id")
+-- CreateTable ContentSource
+CREATE TABLE "ContentSource" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "workspaceId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "sourceType" TEXT NOT NULL,
+    "status" TEXT NOT NULL,
+    "rawPayload" TEXT NOT NULL,
+    "processedContent" TEXT,
+    "metadata" TEXT,
+    "error" TEXT,
+    "embeddings" TEXT,
+    "citations" TEXT,
+    "contentHash" TEXT,
+    "sizeBytes" INTEGER NOT NULL DEFAULT 0,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
+);
+
+-- CreateTable ShareLink
+CREATE TABLE "ShareLink" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "mindMapId" TEXT NOT NULL,
+    "token" TEXT NOT NULL,
+    "role" TEXT NOT NULL,
+    "password" TEXT,
+    "expiresAt" DATETIME,
+    "createdBy" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
+);
+
+-- CreateTable UserPresence
+CREATE TABLE "UserPresence" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "userId" TEXT NOT NULL,
+    "mindMapId" TEXT NOT NULL,
+    "userName" TEXT NOT NULL,
+    "cursorX" REAL,
+    "cursorY" REAL,
+    "color" TEXT NOT NULL,
+    "lastSeenAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- CreateTable MapTemplate
+CREATE TABLE "MapTemplate" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "category" TEXT NOT NULL,
+    "prompt" TEXT NOT NULL,
+    "language" TEXT NOT NULL DEFAULT 'en',
+    "complexity" TEXT NOT NULL DEFAULT 'moderate',
+    "isPublic" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
+);
+
+-- CreateTable ActivityLog
+CREATE TABLE "ActivityLog" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "userId" TEXT NOT NULL,
+    "workspaceId" TEXT,
+    "mindMapId" TEXT,
+    "action" TEXT NOT NULL,
+    "details" TEXT,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- CreateTable Notification
+CREATE TABLE "Notification" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "userId" TEXT NOT NULL,
+    "type" TEXT NOT NULL,
+    "message" TEXT NOT NULL,
+    "read" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- CreateIndex
@@ -129,7 +253,34 @@ CREATE INDEX "WorkspaceMember_workspaceId_idx" ON "WorkspaceMember"("workspaceId
 CREATE INDEX "MindMap_workspaceId_idx" ON "MindMap"("workspaceId");
 
 -- CreateIndex
+CREATE INDEX "MindMap_createdAt_idx" ON "MindMap"("createdAt");
+
+-- CreateIndex
 CREATE INDEX "MapNode_mindMapId_idx" ON "MapNode"("mindMapId");
+
+-- CreateIndex
+CREATE INDEX "MapNode_parentId_idx" ON "MapNode"("parentId");
+
+-- CreateIndex
+CREATE INDEX "MapNode_level_idx" ON "MapNode"("level");
+
+-- CreateIndex
+CREATE INDEX "MapNode_lockedBy_idx" ON "MapNode"("lockedBy");
+
+-- CreateIndex
+CREATE INDEX "NodeCitation_nodeId_idx" ON "NodeCitation"("nodeId");
+
+-- CreateIndex
+CREATE INDEX "GenerationJob_status_idx" ON "GenerationJob"("status");
+
+-- CreateIndex
+CREATE INDEX "GenerationJob_createdAt_idx" ON "GenerationJob"("createdAt");
+
+-- CreateIndex
+CREATE INDEX "GenerationJob_mindMapId_idx" ON "GenerationJob"("mindMapId");
+
+-- CreateIndex
+CREATE INDEX "GenerationJob_nodeId_idx" ON "GenerationJob"("nodeId");
 
 -- CreateIndex
 CREATE INDEX "ContentAttachment_nodeId_idx" ON "ContentAttachment"("nodeId");
@@ -143,26 +294,62 @@ CREATE UNIQUE INDEX "UserProviderKey_userId_provider_key" ON "UserProviderKey"("
 -- CreateIndex
 CREATE INDEX "UserProviderKey_userId_idx" ON "UserProviderKey"("userId");
 
--- AddForeignKey
-ALTER TABLE "Session" ADD CONSTRAINT "Session_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- CreateIndex
+CREATE INDEX "ContentSource_workspaceId_idx" ON "ContentSource"("workspaceId");
 
--- AddForeignKey
-ALTER TABLE "WorkspaceMember" ADD CONSTRAINT "WorkspaceMember_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- CreateIndex
+CREATE INDEX "ContentSource_userId_idx" ON "ContentSource"("userId");
 
--- AddForeignKey
-ALTER TABLE "WorkspaceMember" ADD CONSTRAINT "WorkspaceMember_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "Workspace"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- CreateIndex
+CREATE INDEX "ContentSource_status_idx" ON "ContentSource"("status");
 
--- AddForeignKey
-ALTER TABLE "MindMap" ADD CONSTRAINT "MindMap_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "Workspace"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- CreateIndex
+CREATE INDEX "ContentSource_sourceType_idx" ON "ContentSource"("sourceType");
 
--- AddForeignKey
-ALTER TABLE "MapNode" ADD CONSTRAINT "MapNode_mindMapId_fkey" FOREIGN KEY ("mindMapId") REFERENCES "MindMap"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- CreateIndex
+CREATE INDEX "ContentSource_contentHash_idx" ON "ContentSource"("contentHash");
 
--- AddForeignKey
-ALTER TABLE "ContentAttachment" ADD CONSTRAINT "ContentAttachment_nodeId_fkey" FOREIGN KEY ("nodeId") REFERENCES "MapNode"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- CreateIndex
+CREATE INDEX "ContentSource_createdAt_idx" ON "ContentSource"("createdAt");
 
--- AddForeignKey
-ALTER TABLE "Template" ADD CONSTRAINT "Template_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "Workspace"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- CreateIndex
+CREATE INDEX "ShareLink_mindMapId_idx" ON "ShareLink"("mindMapId");
 
--- AddForeignKey
-ALTER TABLE "UserProviderKey" ADD CONSTRAINT "UserProviderKey_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- CreateIndex
+CREATE INDEX "ShareLink_token_idx" ON "ShareLink"("token");
+
+-- CreateIndex
+CREATE INDEX "ShareLink_expiresAt_idx" ON "ShareLink"("expiresAt");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "UserPresence_userId_mindMapId_key" ON "UserPresence"("userId", "mindMapId");
+
+-- CreateIndex
+CREATE INDEX "UserPresence_mindMapId_idx" ON "UserPresence"("mindMapId");
+
+-- CreateIndex
+CREATE INDEX "UserPresence_lastSeenAt_idx" ON "UserPresence"("lastSeenAt");
+
+-- CreateIndex
+CREATE INDEX "MapTemplate_category_idx" ON "MapTemplate"("category");
+
+-- CreateIndex
+CREATE INDEX "MapTemplate_language_idx" ON "MapTemplate"("language");
+
+-- CreateIndex
+CREATE INDEX "MapTemplate_isPublic_idx" ON "MapTemplate"("isPublic");
+
+-- CreateIndex
+CREATE INDEX "ActivityLog_userId_idx" ON "ActivityLog"("userId");
+
+-- CreateIndex
+CREATE INDEX "ActivityLog_workspaceId_idx" ON "ActivityLog"("workspaceId");
+
+-- CreateIndex
+CREATE INDEX "ActivityLog_createdAt_idx" ON "ActivityLog"("createdAt");
+
+-- CreateIndex
+CREATE INDEX "Notification_userId_idx" ON "Notification"("userId");
+
+-- CreateIndex
+CREATE INDEX "Notification_read_idx" ON "Notification"("read");
