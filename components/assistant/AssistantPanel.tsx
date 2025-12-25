@@ -65,8 +65,7 @@ export function AssistantPanel({ mindMapId, onClose }: AssistantPanelProps) {
           },
         ]);
       }
-    } catch (error) {
-      console.error('Error asking question:', error);
+    } catch {
       setMessages((prev) => [
         ...prev,
         {

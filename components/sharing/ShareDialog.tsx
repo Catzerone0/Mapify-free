@@ -41,8 +41,7 @@ export function ShareDialog({ mindMapId, onClose }: ShareDialogProps) {
       if (data.success) {
         setShareLinks(data.data || []);
       }
-    } catch (err) {
-      console.error('Error fetching share links:', err);
+    } catch {
     }
   }, [mindMapId]);
 
@@ -77,8 +76,7 @@ export function ShareDialog({ mindMapId, onClose }: ShareDialogProps) {
       } else {
         setError(data.message || 'Failed to create share link');
       }
-    } catch (err) {
-      console.error('Error creating share link:', err);
+    } catch {
       setError('Failed to create share link');
     } finally {
       setLoading(false);
@@ -96,8 +94,7 @@ export function ShareDialog({ mindMapId, onClose }: ShareDialogProps) {
       });
 
       setShareLinks(shareLinks.filter((link) => link.id !== linkId));
-    } catch (err) {
-      console.error('Error deleting share link:', err);
+    } catch {
     }
   };
 
@@ -106,8 +103,7 @@ export function ShareDialog({ mindMapId, onClose }: ShareDialogProps) {
       await navigator.clipboard.writeText(url);
       setCopiedLink(linkId);
       setTimeout(() => setCopiedLink(null), 2000);
-    } catch (err) {
-      console.error('Error copying to clipboard:', err);
+    } catch {
     }
   };
 

@@ -40,8 +40,7 @@ const config = {
             email: user.email,
             name: user.name,
           };
-        } catch (error) {
-          console.error("Auth error:", error);
+        } catch {
           return null;
         }
       },

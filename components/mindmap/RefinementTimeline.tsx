@@ -106,9 +106,7 @@ export function RefinementTimeline({ onClose, steps: externalSteps }: Refinement
   };
 
   const handleAcceptStep = (step: RefinementStep) => {
-    if (step.result) {
-      console.log('Accepting step result:', step.result);
-    }
+    void step;
   };
 
   const handleRejectStep = (step: RefinementStep) => {

@@ -32,77 +32,72 @@ interface Workspace {
 
 export default function WorkspacePage() {
   const router = useRouter();
-  const params = useParams();
-  const { isAuthenticated, isLoading: authLoading } = useAuthStore();
+  const params = useParams<{ id: string }>();
+  const { token, user, isLoading: authLoading } = useAuthStore();
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [workspaceId, setWorkspaceId] = useState<string>("");
 
-  // Handle params being a promise in Next.js 13+
-  useEffect(() => {
-    const getWorkspaceId = async () => {
-      try {
-        if (params && typeof params === 'object' && 'id' in params) {
-          const id = params.id;
-          if (typeof id === 'string') {
-            setWorkspaceId(id);
-            return id;
-          }
-        }
-        setError("Invalid workspace ID");
-        setLoading(false);
-        return null;
-      } catch {
-        setError("Failed to load workspace");
-        setLoading(false);
-        return null;
-      }
-    };
+  const authenticated = !!token && !!user;
 
-    getWorkspaceId();
-  }, [params]);
+  // Extract workspace ID directly from params (it's already unwrapped in client components)
+  const workspaceId = params?.id || "";
 
   useEffect(() => {
     if (authLoading) return;
-    if (!isAuthenticated()) {
-      router.push("/auth/login");
+    if (!authenticated) {
+      const loginUrl = new URL("/auth/login", window.location.origin);
+      if (workspaceId) loginUrl.searchParams.set("from", `/workspace/${workspaceId}`);
+      router.replace(loginUrl.pathname + loginUrl.search);
     }
-  }, [authLoading, isAuthenticated, router]);
+  }, [authLoading, authenticated, router, workspaceId]);
 
   useEffect(() => {
     const fetchWorkspace = async () => {
-      if (!workspaceId || !isAuthenticated()) return;
+      if (authLoading || !authenticated) return;
+
+      if (!workspaceId) {
+        setError("Invalid workspace ID");
+        setLoading(false);
+        return;
+      }
 
       try {
+        setError(null);
         setLoading(true);
+
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+        };
+        if (token) headers.Authorization = `Bearer ${token}`;
+
         const response = await fetch(`/api/workspaces/${workspaceId}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-            "Content-Type": "application/json",
-          },
+          headers,
+          credentials: "include",
         });
 
+        const data = await response.json().catch(() => null);
+
         if (!response.ok) {
-          if (response.status === 404) {
-            throw new Error("Workspace not found");
-          }
-          throw new Error("Failed to fetch workspace");
+          const message =
+            data?.error?.message ||
+            data?.message ||
+            data?.error ||
+            (response.status === 404 ? "Workspace not found" : "Failed to fetch workspace");
+          throw new Error(message);
         }
 
-        const data = await response.json();
-        setWorkspace(data.data);
+        setWorkspace(data?.data || null);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to fetch workspace");
+        setWorkspace(null);
       } finally {
         setLoading(false);
       }
     };
 
-    if (workspaceId && workspaceId.length > 0) {
-      fetchWorkspace();
-    }
-  }, [workspaceId, isAuthenticated]);
+    fetchWorkspace();
+  }, [authLoading, authenticated, workspaceId, token]);
 
   const handleGoBack = () => {
     router.push("/dashboard");
@@ -112,15 +107,18 @@ export default function WorkspacePage() {
     router.push(`/mindmap/create?workspace=${workspaceId}`);
   };
 
-  if (authLoading) {
+  if (authLoading || (!authenticated && !error)) {
     return (
-      <div className="min-h-[calc(100vh-3.5rem)] flex items-center justify-center text-foreground-secondary">
-        Loading…
+      <div className="min-h-screen bg-background flex items-center justify-center text-foreground-secondary">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Loading...</p>
+        </div>
       </div>
     );
   }
 
-  if (!isAuthenticated()) {
+  if (!authenticated) {
     return null;
   }
 
