@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { apiResponse } from '@/lib/api-response';
 import { defaultTemplates, getAllCategories, getTemplatesByCategory } from '@/lib/templates/templates-data';
+import { logger } from '@/lib/logger';
 
 // GET /api/templates - Get all templates or filter by category
 export async function GET(req: NextRequest) {
@@ -29,7 +30,7 @@ export async function GET(req: NextRequest) {
       total: templates.length,
     });
   } catch (error) {
-    console.error('Error fetching templates:', error);
+    logger.error('Error fetching templates', error);
     return apiResponse(null, 'Failed to fetch templates', 500);
   }
 }

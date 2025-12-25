@@ -1,7 +1,7 @@
 import NextAuth, { type NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { db } from "./db";
-import { env } from "@/env";
+import { env } from "@/lib/env";
 import bcrypt from "bcrypt";
 
 const config = {

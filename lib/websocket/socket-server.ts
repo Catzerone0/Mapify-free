@@ -1,6 +1,7 @@
 import { Server as HTTPServer } from 'http';
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { db as prisma } from '@/lib/db';
+import { env } from '@/lib/env';
 
 // Token verification helper
 async function verifyToken(token: string): Promise<{ id: string; email: string; name?: string } | null> {
@@ -67,7 +68,7 @@ export function initializeWebSocket(server: HTTPServer): SocketIOServer {
 
   io = new SocketIOServer(server, {
     cors: {
-      origin: process.env.NEXTAUTH_URL || 'http://localhost:3000',
+      origin: env.NEXTAUTH_URL || 'http://localhost:3000',
       methods: ['GET', 'POST'],
       credentials: true,
     },

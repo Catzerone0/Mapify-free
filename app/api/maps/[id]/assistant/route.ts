@@ -5,6 +5,7 @@ import { apiResponse, ApiError } from '@/lib/api-response';
 import { AssistantService } from '@/lib/ai/assistant-service';
 import { z } from 'zod';
 import { decryptKey } from '@/lib/encryption';
+import { logger } from '@/lib/logger';
 
 const assistantQuestionSchema = z.object({
   question: z.string().min(1).max(1000),
@@ -78,7 +79,7 @@ export async function POST(
     if (error instanceof ApiError) {
       return apiResponse(null, error.message, error.statusCode);
     }
-    console.error('Error answering question:', error);
+    logger.error('Error answering question', error);
     return apiResponse(null, 'Failed to answer question', 500);
   }
 }

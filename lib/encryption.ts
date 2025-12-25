@@ -1,5 +1,5 @@
 import CryptoJS from "crypto-js";
-import { env } from "@/env";
+import { env } from "@/lib/env";
 
 /**
  * Encrypts a string using AES encryption

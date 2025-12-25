@@ -1,5 +1,5 @@
 import { Queue } from "bullmq";
-import { env } from "@/env";
+import { env } from "@/lib/env";
 import { logger } from "./logger";
 
 // Job types

@@ -1,11 +1,11 @@
 type LogLevel = "debug" | "info" | "warn" | "error";
 
-interface LogContext {
+type LogContext = {
   userId?: string;
   workspaceId?: string;
   requestId?: string;
   [key: string]: unknown;
-}
+};
 
 const SENSITIVE_FIELDS = [
   "password",
@@ -30,11 +30,15 @@ class Logger {
       const lowerKey = key.toLowerCase();
       if (SENSITIVE_FIELDS.some((field) => lowerKey.includes(field))) {
         sanitized[key] = "[REDACTED]";
-      } else if (typeof value === "object" && value !== null) {
-        sanitized[key] = this.sanitizeContext(value as LogContext);
-      } else {
-        sanitized[key] = value;
+        continue;
       }
+
+      if (typeof value === "object" && value !== null) {
+        sanitized[key] = this.sanitizeContext(value as LogContext);
+        continue;
+      }
+
+      sanitized[key] = value;
     }
     return sanitized;
   }
@@ -46,24 +50,38 @@ class Logger {
     return `[${timestamp}] [${level.toUpperCase()}] ${message}${contextStr}`;
   }
 
-  debug(message: string, context?: LogContext) {
-    if (this.isDev) {
-      console.debug(this.formatMessage("debug", message, context));
+  private write(line: string, stream: "stdout" | "stderr") {
+    if (typeof window !== "undefined") return;
+
+    try {
+      if (stream === "stderr") {
+        process.stderr.write(line + "\n");
+      } else {
+        process.stdout.write(line + "\n");
+      }
+    } catch {
+      // ignore
     }
   }
 
+  debug(message: string, context?: LogContext) {
+    if (!this.isDev) return;
+    this.write(this.formatMessage("debug", message, context), "stdout");
+  }
+
   info(message: string, context?: LogContext) {
-    console.info(this.formatMessage("info", message, context));
+    this.write(this.formatMessage("info", message, context), "stdout");
   }
 
   warn(message: string, context?: LogContext) {
-    console.warn(this.formatMessage("warn", message, context));
+    this.write(this.formatMessage("warn", message, context), "stderr");
   }
 
   error(message: string, error?: Error | unknown, context?: LogContext) {
-    console.error(this.formatMessage("error", message, context));
-    if (error instanceof Error) {
-      console.error(error.stack);
+    this.write(this.formatMessage("error", message, context), "stderr");
+
+    if (error instanceof Error && error.stack) {
+      this.write(error.stack, "stderr");
     }
   }
 }
