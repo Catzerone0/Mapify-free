@@ -156,7 +156,9 @@ export async function POST(request: NextRequest) {
             }
 
             // Use processed content as prompt
-            const content = contentSource.processedContent as Record<string, unknown>;
+            const content = contentSource.processedContent 
+              ? JSON.parse(contentSource.processedContent) as Record<string, unknown>
+              : null;
             if (content && typeof content.summary === 'string') {
               prompt = content.summary;
             }
@@ -190,7 +192,9 @@ export async function POST(request: NextRequest) {
             }
 
             // Use processed content as prompt
-            const content = contentSource.processedContent as Record<string, unknown>;
+            const content = contentSource.processedContent 
+              ? JSON.parse(contentSource.processedContent) as Record<string, unknown>
+              : null;
             if (content && typeof content.summary === 'string') {
               prompt = content.summary;
             }
@@ -222,7 +226,9 @@ export async function POST(request: NextRequest) {
             }
 
             // Use processed content as prompt
-            const content = contentSource.processedContent as Record<string, unknown>;
+            const content = contentSource.processedContent 
+              ? JSON.parse(contentSource.processedContent) as Record<string, unknown>
+              : null;
             if (content && typeof content.summary === 'string') {
               prompt = content.summary;
             }

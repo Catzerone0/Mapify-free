@@ -48,10 +48,10 @@ export async function POST(request: NextRequest) {
         email,
         password: hashedPassword,
         name: name || email.split("@")[0],
-        preferences: {
+        preferences: JSON.stringify({
           emailVerified: false,
           onboardingComplete: false,
-        },
+        }),
       },
     });
 

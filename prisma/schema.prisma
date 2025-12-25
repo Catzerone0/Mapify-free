@@ -6,8 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 model User {
@@ -19,7 +19,7 @@ model User {
   bio       String?
   language  String     @default("en")
   theme     String     @default("auto") // light, dark, auto
-  preferences Json?    // Notification settings, editor preferences, etc.
+  preferences String?  // Notification settings, editor preferences, etc. (stored as JSON string)
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 
@@ -34,26 +34,26 @@ model User {
 }
 
 model Session {
-  id        String     @id @default(cuid())
+  id        String   @id @default(cuid())
   userId    String
-  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  token     String     @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
   expiresAt DateTime
-  createdAt DateTime   @default(now())
+  createdAt DateTime @default(now())
 
   @@index([userId])
   @@index([token])
 }
 
 model Workspace {
-  id        String     @id @default(cuid())
+  id        String   @id @default(cuid())
   name      String
-  icon      String?    // Emoji or icon URL
-  color     String?    // Workspace theme color
-  visibility String    @default("private") // "private" | "public"
-  settings  Json?      // Additional workspace settings
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  icon      String?  // Emoji or icon URL
+  color     String?  // Workspace theme color
+  visibility String  @default("private") // "private" | "public"
+  settings  String?  // Additional workspace settings (stored as JSON string)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   members        WorkspaceMember[]
   mindMaps       MindMap[]
@@ -78,56 +78,56 @@ model WorkspaceMember {
 }
 
 model MindMap {
-  id            String    @id @default(cuid())
-  title         String
-  description   String?
-  summary       String?   // Generated AI summary of the entire map
-  prompt        String?   // Original prompt used for generation
-  provider      String?   // Which AI provider was used
-  complexity    String?   // simple, moderate, complex
-  layout        String?   // hierarchical, radial, etc.
-  style         Json?     // Global style settings for this map
-  settings      Json?     // Generation/Editor settings
-  workspaceId   String
-  embeddings    Json?     // Vector embeddings for AI assistant
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  summary     String?   // Generated AI summary of the entire map
+  prompt      String?   // Original prompt used for generation
+  provider    String?   // Which AI provider was used
+  complexity  String?   // simple, moderate, complex
+  layout      String?   // hierarchical, radial, etc.
+  style       String?   // Global style settings for this map (stored as JSON string)
+  settings    String?   // Generation/Editor settings (stored as JSON string)
+  workspaceId String
+  embeddings  String?   // Vector embeddings for AI assistant (stored as JSON string)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  workspace     Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  nodes         MapNode[]
-  generationJobs GenerationJob[]
-  shareLinks    ShareLink[]
-  activityLogs  ActivityLog[]
+  workspace       Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  nodes           MapNode[]
+  generationJobs  GenerationJob[]
+  shareLinks      ShareLink[]
+  activityLogs    ActivityLog[]
 
   @@index([workspaceId])
   @@index([createdAt])
 }
 
 model MapNode {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   mindMapId   String
   title       String?
-  content     String    // Rich text content, summary, or expanded details
+  content     String   // Rich text content, summary, or expanded details
   parentId    String?
   children    MapNode[] @relation("NodeChildren")
-  x           Float     @default(0)
-  y           Float     @default(0)
-  width       Float     @default(200)
-  height      Float     @default(100)
-  color       String?   // Hex color for node styling
-  shape       String    @default("rectangle") // rectangle, circle, diamond, etc.
-  style       Json?     // Advanced styling overrides
-  level       Int       @default(0) // Depth in hierarchy
-  order       Int       @default(0) // Order among siblings
-  isCollapsed Boolean   @default(false)
-  embeddings  Json?     // Vector embeddings for AI assistant
-  lockedBy    String?   // User ID who has locked this node for editing
+  x           Float    @default(0)
+  y           Float    @default(0)
+  width       Float    @default(200)
+  height      Float    @default(100)
+  color       String?  // Hex color for node styling
+  shape       String   @default("rectangle") // rectangle, circle, diamond, etc.
+  style       String?  // Advanced styling overrides (stored as JSON string)
+  level       Int      @default(0) // Depth in hierarchy
+  order       Int      @default(0) // Order among siblings
+  isCollapsed Boolean  @default(false)
+  embeddings  String?  // Vector embeddings for AI assistant (stored as JSON string)
+  lockedBy    String?  // User ID who has locked this node for editing
   lockedAt    DateTime? // When the node was locked
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  mindMap     MindMap               @relation(fields: [mindMapId], references: [id], onDelete: Cascade)
-  parent      MapNode?              @relation("NodeChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  mindMap     MindMap              @relation(fields: [mindMapId], references: [id], onDelete: Cascade)
+  parent      MapNode?             @relation("NodeChildren", fields: [parentId], references: [id], onDelete: Cascade)
   attachments ContentAttachment[]
   citations   NodeCitation[]
   generationJobs GenerationJob[]
@@ -153,22 +153,22 @@ model NodeCitation {
 }
 
 model GenerationJob {
-  id          String     @id @default(cuid())
+  id          String    @id @default(cuid())
   mindMapId   String?
   nodeId      String?
   prompt      String
-  provider    String     // openai, gemini, anthropic
-  status      String     // pending, processing, completed, failed
-  result      Json?      // Generated content tree
+  provider    String    // openai, gemini, anthropic
+  status      String    // pending, processing, completed, failed
+  result      String?   // Generated content tree (stored as JSON string)
   error       String?
-  tokensUsed  Int        @default(0)
+  tokensUsed  Int       @default(0)
   startedAt   DateTime?
   completedAt DateTime?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
-  mindMap     MindMap?   @relation(fields: [mindMapId], references: [id], onDelete: Cascade)
-  node        MapNode?   @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  mindMap     MindMap?  @relation(fields: [mindMapId], references: [id], onDelete: Cascade)
+  node        MapNode?  @relation(fields: [nodeId], references: [id], onDelete: Cascade)
 
   @@index([status])
   @@index([createdAt])
@@ -185,7 +185,7 @@ model ContentAttachment {
   type     String   // "image" | "link" | "note"
   url      String?
   content  String?
-  metadata Json?
+  metadata String?  // (stored as JSON string)
   createdAt DateTime @default(now())
 
   node MapNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
@@ -197,7 +197,7 @@ model Template {
   id          String   @id @default(cuid())
   name        String
   description String?
-  content     Json
+  content     String   // (stored as JSON string)
   workspaceId String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -214,7 +214,7 @@ model UserProviderKey {
   label       String?
   encryptedKey String
   isDefault   Boolean  @default(false)
-  usage       Json?    // Track usage stats
+  usage       String?  // Track usage stats (stored as JSON string)
   lastUsedAt  DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -230,12 +230,12 @@ model ContentSource {
   userId           String
   sourceType       String   // "text" | "youtube" | "pdf" | "web" | "websearch"
   status           String   // "pending" | "processing" | "completed" | "failed"
-  rawPayload       Json     // Original input data
-  processedContent Json?    // Normalized chunks with metadata
-  metadata         Json?    // Title, URL, timestamps, author, etc.
+  rawPayload       String   // Original input data (stored as JSON string)
+  processedContent String?  // Normalized chunks with metadata (stored as JSON string)
+  metadata         String?  // Title, URL, timestamps, author, etc. (stored as JSON string)
   error            String?  // Error message for failed ingestions
-  embeddings       Json?    // Vector embeddings (optional for now)
-  citations        Json?    // Source attribution
+  embeddings       String?  // Vector embeddings (optional for now, stored as JSON string)
+  citations        String?  // Source attribution (stored as JSON string)
   contentHash      String?  // For deduplication
   sizeBytes        Int      @default(0)
   createdAt        DateTime @default(now())
@@ -309,12 +309,12 @@ model ActivityLog {
   workspaceId String?
   mindMapId   String?
   action      String   // create, edit, delete, comment, share
-  details     Json?
+  details     String?  // (stored as JSON string)
   createdAt   DateTime @default(now())
 
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  workspace   Workspace? @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
-  mindMap     MindMap?  @relation(fields: [mindMapId], references: [id], onDelete: SetNull)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
+  mindMap   MindMap?  @relation(fields: [mindMapId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([workspaceId])
@@ -329,7 +329,7 @@ model Notification {
   read        Boolean  @default(false)
   createdAt   DateTime @default(now())
 
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([read])

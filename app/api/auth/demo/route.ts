@@ -19,11 +19,11 @@ export async function POST(request: NextRequest) {
         email,
         password: hashedPassword,
         name: "Demo User",
-        preferences: {
+        preferences: JSON.stringify({
           emailVerified: true,
           onboardingComplete: true,
           demo: true,
-        },
+        }),
       },
     });
 

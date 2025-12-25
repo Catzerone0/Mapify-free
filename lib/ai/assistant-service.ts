@@ -276,7 +276,7 @@ Instructions:
         await prisma.mapNode.update({
           where: { id: node.id },
           data: {
-            embeddings: embedding,
+            embeddings: JSON.stringify(embedding),
           },
         });
       }
@@ -290,7 +290,7 @@ Instructions:
       await prisma.mindMap.update({
         where: { id: mindMapId },
         data: {
-          embeddings: allEmbeddings.map((e) => e.embeddings),
+          embeddings: JSON.stringify(allEmbeddings.map((e) => e.embeddings)),
         },
       });
     }

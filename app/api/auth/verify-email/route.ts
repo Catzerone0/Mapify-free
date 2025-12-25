@@ -22,15 +22,16 @@ export async function POST(request: NextRequest) {
       throw new ValidationError("Invalid token");
     }
 
-    const preferences = (user.preferences as Record<string, unknown> | null) || {};
+    const preferences = (user.preferences as string | null);
+    const preferencesObj = preferences ? JSON.parse(preferences) : {};
 
     await db.user.update({
       where: { id: user.id },
       data: {
-        preferences: {
-          ...preferences,
+        preferences: JSON.stringify({
+          ...preferencesObj,
           emailVerified: true,
-        },
+        }),
       },
     });
 
